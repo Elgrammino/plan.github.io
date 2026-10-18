@@ -1,0 +1,73 @@
+/* Все цвета и размеры приложения. В остальных файлах только var(--…), без «сырых» значений.
+   Палитра: Сандзо Вада, сочетание №325, тёмный вариант. */
+:root {
+    /* цвета: только эти четыре плюс прозрачности */
+    --bg: #112F2C;      /* Deep Slate Green — фон, ~60% */
+    --text: #FBE6A0;    /* Naples Yellow — текст и светлые кнопки, ~25%; к фону 11.5:1 */
+    --accent: #E2B540;  /* Yellow Ocher — «сейчас» и главное действие, ~10%; к фону 7.4:1 */
+    --alert: #DA525D;   /* Eugenia Red — дедлайн и просрочка, ~5%; к фону 3.6:1: только рамки, иконки, крупные цифры */
+
+    --text-2: color-mix(in srgb, var(--text) 70%, transparent);    /* подписи */
+    --text-3: color-mix(in srgb, var(--text) 50%, transparent);    /* третичное, неактивные вкладки */
+    --line: color-mix(in srgb, var(--text) 10%, transparent);      /* разделители */
+    --surface: color-mix(in srgb, var(--text) 8%, transparent);    /* фон карточек и вторичных кнопок */
+    --surface-2: color-mix(in srgb, var(--text) 12%, transparent); /* нажатая карточка, дорожка прогресса */
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-line: color-mix(in srgb, var(--accent) 55%, transparent);
+    --on-accent: var(--bg); /* текст на заливке акцента всегда цвета фона */
+
+    /* шрифты */
+    --font-head: "Literata", Georgia, serif;
+    --font-body: "Onest", -apple-system, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+    /* шкала размеров шрифта */
+    --fs-12: 12px;
+    --fs-14: 14px;
+    --fs-16: 16px;
+    --fs-18: 18px;
+    --fs-20: 20px;
+    --fs-24: 24px;
+    --fs-30: 30px;
+    --fs-36: 36px;
+    --fs-48: 48px;
+
+    /* шкала отступов */
+    --sp-4: 4px;
+    --sp-8: 8px;
+    --sp-12: 12px;
+    --sp-16: 16px;
+    --sp-20: 20px;
+    --sp-24: 24px;
+    --sp-32: 32px;
+    --sp-48: 48px;
+    --sp-64: 64px;
+
+    /* радиусы: карточки и кнопки */
+    --r-12: 12px;
+    --r-16: 16px;
+
+    /* касания */
+    --tap: 44px;
+    --tabbar-h: 56px;
+
+    /* движение: коротко и тихо */
+    --dur-fast: 120ms;
+    --dur: 220ms;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+
+    /* безопасные зоны iPhone */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+
+    color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --dur-fast: 1ms;
+        --dur: 1ms;
+    }
+}

@@ -1,0 +1,270 @@
+/* Общая разметка: оболочка, нижняя панель, типографика, карточки, кнопки. */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--fs-16);
+    line-height: 1.45;
+    font-kerning: normal;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.text-2 {
+    color: var(--text-2);
+}
+
+.text-3 {
+    color: var(--text-3);
+}
+
+/* ---- оболочка ---- */
+.app {
+    min-height: 100%;
+    padding: calc(var(--safe-top) + var(--sp-16)) calc(var(--safe-right) + var(--sp-20))
+             calc(var(--safe-bottom) + var(--tabbar-h) + var(--sp-32)) calc(var(--safe-left) + var(--sp-20));
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.screen[hidden] {
+    display: none;
+}
+
+.screen {
+    animation: appear var(--dur) var(--ease);
+}
+
+@keyframes appear {
+    from { opacity: 0; }
+}
+
+.title {
+    font: 600 var(--fs-30)/1.1 var(--font-head);
+    letter-spacing: -.01em;
+    margin: var(--sp-8) 0 var(--sp-4);
+}
+
+.subtitle {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+    margin: 0 0 var(--sp-24);
+}
+
+.label {
+    font-size: var(--fs-12);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: var(--sp-24) 0 var(--sp-8);
+}
+
+/* ---- карточки и кнопки ---- */
+.card {
+    background: var(--surface);
+    border-radius: var(--r-16);
+    padding: var(--sp-16);
+}
+
+.card + .card {
+    margin-top: var(--sp-12);
+}
+
+.card.notice {
+    background: var(--accent-soft);
+    border: 1.5px solid var(--accent-line);
+}
+
+.btn {
+    min-height: var(--tap);
+    padding: 0 var(--sp-16);
+    border-radius: var(--r-12);
+    font-weight: 600;
+    font-size: var(--fs-16);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-8);
+    transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+.btn:active {
+    transform: scale(.97);
+    opacity: .85;
+}
+
+.btn.primary {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.btn.ghost {
+    background: var(--surface);
+}
+
+.btn.wide {
+    width: 100%;
+}
+
+/* ---- пустое состояние ---- */
+.empty {
+    text-align: center;
+    padding: var(--sp-64) var(--sp-24);
+    color: var(--text-2);
+}
+
+.empty .mark {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--sp-16);
+    stroke: var(--text-3);
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.empty p {
+    margin: 0 auto;
+    max-width: 30ch;
+}
+
+/* ---- строки проверки ---- */
+.check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-12);
+    padding: var(--sp-12) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.check-row:last-child {
+    border-bottom: 0;
+}
+
+.check-row .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    flex: none;
+    margin-top: 1px;
+    border: 2px solid var(--text-3);
+    display: grid;
+    place-items: center;
+}
+
+.check-row.ok .dot {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.check-row.ok .dot::after {
+    content: "";
+    width: 9px;
+    height: 5px;
+    border: 2px solid var(--on-accent);
+    border-top: 0;
+    border-right: 0;
+    transform: translateY(-1px) rotate(-45deg);
+}
+
+.check-row.bad .dot {
+    border-color: var(--alert);
+}
+
+.check-row .what {
+    flex: 1;
+}
+
+.check-row .why {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+    margin-top: 2px;
+}
+
+/* ---- нижняя панель ---- */
+.tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: var(--sp-4) calc(var(--safe-right) + var(--sp-8)) var(--safe-bottom) calc(var(--safe-left) + var(--sp-8));
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+}
+
+.tab {
+    flex: 1;
+    max-width: 96px;
+    height: var(--tabbar-h);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    font-size: 11px;
+    color: var(--text-3);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.tab svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.tab[aria-current="page"] {
+    color: var(--text);
+}
+
+/* ---- тихое сообщение снизу ---- */
+.toast {
+    position: fixed;
+    left: var(--sp-16);
+    right: var(--sp-16);
+    bottom: calc(var(--safe-bottom) + var(--tabbar-h) + var(--sp-16));
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-12);
+    padding: var(--sp-8) var(--sp-8) var(--sp-8) var(--sp-16);
+    background: var(--bg);
+    border: 1.5px solid var(--accent-line);
+    border-radius: var(--r-16);
+    animation: appear var(--dur) var(--ease);
+}
+
+.toast span {
+    flex: 1;
+}

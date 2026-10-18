@@ -1,0 +1,8 @@
+# Рабочие материалы, которые не публикуем: ТЗ, бриф, стенд, чужие проекты и настройки Claude
+planner-prompt.md
+design-brief.md
+design-options.html
+michaelstark.github.io-master/
+.agents/
+.claude/
+.playwright-cli/
