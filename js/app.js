@@ -1,38 +1,116 @@
 import { getMeta, setMeta } from "./db.js";
+import { addDays, dayKey } from "./dates.js";
+import { renderInbox, renderToday } from "./screens.js";
+import { editTask, postponeTask, quickAdd } from "./sheets.js";
+import { loadStore, onChange, overdueTasks, saveTask, setDone, state } from "./store.js";
+import { haptic, showToast } from "./ui.js";
 
 const version = self.APP_VERSION;
 const isStandalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+
+let activeScreen = "today";
+let viewDay = new Date();
 
 // ---- навигация по вкладкам ----
 const tabs = document.querySelectorAll(".tab");
 const screens = document.querySelectorAll(".screen");
 
 function showScreen(id) {
+    activeScreen = id;
     screens.forEach(screen => screen.hidden = screen.id !== id);
     tabs.forEach(tab => tab.dataset.screen === id ? tab.setAttribute("aria-current", "page") : tab.removeAttribute("aria-current"));
+    document.getElementById("fab").hidden = !["today", "inbox"].includes(id);
     window.scrollTo(0, 0);
-    if (id === "more") {
+    render();
+}
+
+tabs.forEach(tab => tab.addEventListener("click", () => {
+    if (tab.dataset.screen === "today" && activeScreen === "today") {
+        viewDay = new Date(); // повторное нажатие возвращает к сегодня
+    }
+    showScreen(tab.dataset.screen);
+}));
+
+// ---- отрисовка ----
+const INSTALL_HINT = `
+    <div class="card notice" style="margin-top: var(--sp-16)">
+        Чтобы план не&nbsp;потерялся, открой его с&nbsp;домашнего экрана:
+        <b>Поделиться</b> → <b>На&nbsp;экран «Домой»</b>. В&nbsp;Safari iOS стирает данные сайтов через 7&nbsp;дней без визитов.
+    </div>`;
+
+function render() {
+    if (activeScreen === "today") {
+        renderToday(document.getElementById("today"), viewDay);
+        if (!isStandalone) {
+            document.getElementById("installHint").innerHTML = INSTALL_HINT;
+        }
+    } else if (activeScreen === "inbox") {
+        renderInbox(document.getElementById("inbox"));
+    } else if (activeScreen === "more") {
         renderChecks();
     }
+    // спокойный счётчик на иконке: только просроченное
+    const late = overdueTasks().length;
+    navigator.setAppBadge?.(late).catch(() => { });
 }
 
-tabs.forEach(tab => tab.addEventListener("click", () => showScreen(tab.dataset.screen)));
+onChange(render);
+// раз в минуту: двигается линия «сейчас» и блок «Сейчас»
+setInterval(() => activeScreen === "today" && render(), 60000);
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && render());
 
-// ---- «Сегодня» ----
-function capitalize(text) {
-    return text.charAt(0).toUpperCase() + text.slice(1);
+// ---- действия с задачами (делегирование) ----
+document.querySelector(".app").addEventListener("click", event => {
+    const dayButton = event.target.closest("[data-day]");
+    if (dayButton) {
+        const shift = +dayButton.dataset.day;
+        viewDay = shift ? addDays(viewDay, shift) : new Date();
+        render();
+        return;
+    }
+    const button = event.target.closest("[data-action]");
+    const holder = button?.closest("[data-id]");
+    if (!holder) {
+        return;
+    }
+    const task = state.tasks.get(holder.dataset.id);
+    switch (button.dataset.action) {
+        case "toggle":
+            toggle(task, holder);
+            break;
+        case "edit":
+            editTask(task);
+            break;
+        case "postpone":
+            postponeTask(task);
+            break;
+        case "today":
+            haptic();
+            task.plannedAt = dayKey(new Date());
+            saveTask(task);
+            showToast("На сегодня", "Отменить", () => {
+                task.plannedAt = null;
+                saveTask(task);
+            });
+            break;
+    }
+});
+
+function toggle(task, holder) {
+    haptic();
+    if (task.done) {
+        setDone(task, false);
+        return;
+    }
+    // выполненная задача мягко растворяется, потом сохраняется
+    holder.classList.add("leaving");
+    setTimeout(() => {
+        setDone(task, true);
+        showToast("Готово", "Вернуть", () => setDone(task, false));
+    }, 300);
 }
 
-document.getElementById("todayDate").textContent =
-    capitalize(new Date().toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" }));
-
-if (!isStandalone) {
-    document.getElementById("installHint").innerHTML = `
-        <div class="card notice">
-            Чтобы план не&nbsp;потерялся, открой его с&nbsp;домашнего экрана:
-            <b>Поделиться</b> → <b>На&nbsp;экран «Домой»</b>. В&nbsp;Safari iOS стирает данные сайтов через 7&nbsp;дней без визитов.
-        </div>`;
-}
+document.getElementById("fab").addEventListener("click", quickAdd);
 
 // ---- защита данных: просим не стирать хранилище при каждом запуске ----
 async function protectStorage() {
@@ -45,12 +123,10 @@ async function protectStorage() {
 const persistPromise = protectStorage();
 
 // ---- счётчик запусков: проверка, что база переживает перезапуск ----
-const launchesPromise = getMeta("launches").then(async (count = 0) => {
+getMeta("launches").then(async (count = 0) => {
     await setMeta("launches", count + 1);
-    return count + 1;
+    document.getElementById("launches").textContent = count + 1;
 });
-
-launchesPromise.then(count => document.getElementById("launches").textContent = count);
 document.getElementById("version").textContent = version;
 
 // ---- офлайн ----
@@ -91,21 +167,16 @@ async function renderChecks() {
 }
 
 // ---- service worker и обновления ----
-function showToast(text, actionText, action) {
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerHTML = `<span>${text}</span><button class="btn primary">${actionText}</button>`;
-    toast.querySelector("button").addEventListener("click", action);
-    document.body.append(toast);
-}
-
 if ("serviceWorker" in navigator) {
     const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register("./sw.js");
     // первая установка тоже меняет controller, о ней не сообщаем
     navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (hadController) {
-            showToast("Вышла новая версия", "Обновить", () => location.reload());
+            showToast("Вышла новая версия", "Обновить", () => location.reload(), 0);
         }
     });
 }
+
+// ---- старт ----
+loadStore().then(render);

@@ -1,6 +1,6 @@
 // Офлайн: при первом запуске все файлы сохраняются в телефоне и дальше берутся оттуда.
 // При любом изменении файлов поднять версию здесь И в js/version.js.
-const CACHE_NAME = "plan-0.1.0";
+const CACHE_NAME = "plan-0.2.0";
 
 // пути относительно sw.js
 const ASSETS = [
@@ -10,9 +10,16 @@ const ASSETS = [
     "./css/fonts.css",
     "./css/tokens.css",
     "./css/base.css",
+    "./css/tasks.css",
     "./js/version.js",
     "./js/app.js",
     "./js/db.js",
+    "./js/dates.js",
+    "./js/parse.js",
+    "./js/store.js",
+    "./js/ui.js",
+    "./js/sheets.js",
+    "./js/screens.js",
     "./fonts/literata-cyrillic.woff2",
     "./fonts/literata-latin.woff2",
     "./fonts/onest-cyrillic.woff2",
@@ -53,7 +60,14 @@ self.addEventListener("fetch", event => {
     }
     event.respondWith(
         caches.match(request, { ignoreSearch: request.mode === "navigate" })
-            .then(cached => cached || fetch(request))
+            // если файла нет в кэше (кэш вытеснили), берём из сети и сразу кладём обратно
+            .then(cached => cached || fetch(request).then(response => {
+                if (response.ok) {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+                }
+                return response;
+            }))
             .catch(() => request.mode === "navigate" ? caches.match("./index.html") : Response.error())
     );
 });
