@@ -1,6 +1,7 @@
 import { getMeta, setMeta } from "./db.js";
 import { addDays, dayKey } from "./dates.js";
 import { openDump } from "./dump.js";
+import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
 import { editTask, postponeTask, quickAdd } from "./sheets.js";
 import { loadStore, onChange, overdueTasks, saveTask, setDone, state } from "./store.js";
@@ -48,6 +49,7 @@ function render() {
     } else if (activeScreen === "inbox") {
         renderInbox(document.getElementById("inbox"));
     } else if (activeScreen === "more") {
+        renderMore(document.getElementById("exchange"));
         renderChecks();
     }
     // спокойный счётчик на иконке: только просроченное
@@ -116,6 +118,7 @@ function toggle(task, holder) {
     }, 300);
 }
 
+document.getElementById("more").addEventListener("click", onMoreClick);
 document.getElementById("fab").addEventListener("click", quickAdd);
 
 // ---- защита данных: просим не стирать хранилище при каждом запуске ----

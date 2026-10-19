@@ -77,7 +77,11 @@ export function newTask(fields = {}) {
         notes: "",
         checklist: [],     // [{ text, done }]
         status: null,
-        batch: null,
+        batch: null,       // пакет импорта от Claude
+        repeat: null,      // { unit: "day"|"week"|"month", every, weekdays, monthDay } — см. docs/claude-format.md
+        show: null,        // выступление: { client, phone, address, fee, format, travelMin }
+        importedAt: null,  // когда задача последний раз пришла из файла
+        imported: null,    // поля, какими они пришли из файла: по ним видно, что ты менял сам
         done: false,
         doneAt: null,
         createdAt: now,
@@ -98,6 +102,22 @@ export function setDone(task, done) {
     task.done = done;
     task.doneAt = done ? toIso(new Date()) : null;
     return saveTask(task);
+}
+
+// импорт, откат, сдвиг пакета: много задач сразу, даты правки ставит вызывающий
+export async function putTasks(tasks) {
+    tasks.forEach(task => state.tasks.set(task.id, task));
+    changed();
+    await Promise.all(tasks.map(task => put("tasks", task)));
+}
+
+// списки целиком: импорт добавляет новые, откат возвращает прежние
+export async function setLists(lists) {
+    const keep = new Set(lists.map(list => list.id));
+    const gone = state.lists.filter(list => !keep.has(list.id));
+    state.lists = [...lists].sort((a, b) => a.order - b.order);
+    changed();
+    await Promise.all([...gone.map(list => remove("lists", list.id)), ...lists.map(list => put("lists", list))]);
 }
 
 // удаление — в корзину на 30 дней
