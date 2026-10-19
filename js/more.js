@@ -5,6 +5,7 @@ import {
     applyPlan, batches, exportForClaude, lastImport, makeBackup, prepareBackup, preparePackage,
     readPackage, rollbackImport, saveFile, shiftBatch, trashBatch
 } from "./exchange.js";
+import { openSettings, settingsRows } from "./settings.js";
 import { state } from "./store.js";
 import { esc, haptic, openSheet, showToast } from "./ui.js";
 
@@ -33,6 +34,9 @@ export async function renderMore(el) {
     const backupOld = !lastBackupAt || Date.now() - new Date(lastBackupAt) > 7 * 86400000;
 
     el.innerHTML = `
+        <div class="label">Настройки</div>
+        ${settingsRows()}
+
         <div class="label">Обмен с&nbsp;Claude</div>
         <div class="card stack">
             <button class="btn primary wide" data-more="file">Импорт из&nbsp;файла</button>
@@ -84,6 +88,11 @@ fileInput.addEventListener("change", async () => {
 });
 
 export function onMoreClick(event) {
+    const settingsButton = event.target.closest("[data-settings]");
+    if (settingsButton) {
+        openSettings(settingsButton.dataset.settings);
+        return;
+    }
     const batchButton = event.target.closest("[data-batch]");
     if (batchButton) {
         batchSheet(batchButton.dataset.batch);

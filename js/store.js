@@ -6,10 +6,30 @@ import { daysBetween, nextAfterDone } from "./repeat.js";
 export const state = {
     tasks: new Map(),
     lists: [],
-    settings: { dayLimitMin: 7 * 60, dumpMin: 10 },
+    settings: defaultSettings(),
+    templates: [],      // шаблоны чек-листов: [{ id, name, steps: ["…"] }]
     dump: null,         // черновик выгрузки из головы: переживает закрытие приложения
     lastDumpDay: null   // день последней законченной выгрузки
 };
+
+function defaultSettings() {
+    return {
+        dayLimitMin: 7 * 60,
+        dumpMin: 10,
+        morning: "08:00",          // утренний ритуал
+        evening: "20:00",          // вечерний ритуал: с этого времени зовём на выгрузку
+        postpone: ["15m", "1h", "evening", "tomorrow", "weekend"],
+        postponeEvening: "19:00",  // «Вечером»
+        postponeMorning: "09:00",  // «Завтра утром», «Послезавтра»
+        postponeWeekend: "10:00"   // «В выходные»
+    };
+}
+
+// примеры, чтобы было с чего начать: правятся в «Ещё → Шаблоны»
+const DEFAULT_TEMPLATES = [
+    { id: "tpl-corp", name: "Сборы: корпоратив", steps: ["Реквизит по списку номера", "Костюм отглажен", "Колонка и микрофон заряжены", "Запасные батарейки", "Адрес и контакт заказчика", "Договор и предоплата"] },
+    { id: "tpl-kids", name: "Сборы: детский праздник", steps: ["Реквизит для детского номера", "Костюм", "Колонка заряжена", "Призы и подарки", "Адрес и имя именинника", "Контакт родителей"] }
+];
 
 const listeners = new Set();
 
@@ -24,9 +44,10 @@ function changed() {
 }
 
 export async function loadStore() {
-    const [tasks, lists, settings, dump, lastDumpDay] = await Promise.all([
-        getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay")
+    const [tasks, lists, settings, dump, lastDumpDay, templates] = await Promise.all([
+        getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay"), getMeta("templates")
     ]);
+    state.templates = templates || DEFAULT_TEMPLATES;
     // корзина хранит задачи 30 дней
     const purgeBefore = toIso(addDays(new Date(), -30));
     tasks.forEach(task => {
@@ -37,9 +58,14 @@ export async function loadStore() {
         }
     });
     state.lists = lists.sort((a, b) => a.order - b.order);
-    Object.assign(state.settings, settings);
+    Object.assign(state.settings, settings); // поверх значений по умолчанию: новые ключи не теряются
     state.dump = dump || null;
     state.lastDumpDay = lastDumpDay || null;
+}
+
+export function saveTemplates() {
+    changed();
+    return setMeta("templates", state.templates);
 }
 
 export function saveSettings() {
@@ -226,25 +252,72 @@ export function listName(id) {
     return state.lists.find(list => list.id === id)?.name || "";
 }
 
-// ---- перенос в одно касание ----
+// ---- корзина и журнал сделанного ----
+export function trashedTasks() {
+    return [...state.tasks.values()].filter(task => task.deletedAt)
+        .sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+}
+
+// сделанное по дням, свежие дни сверху: [{ day: "2026-10-19", tasks }]
+export function doneByDay(days = 60, now = new Date()) {
+    const since = dayKey(addDays(now, -days));
+    const groups = new Map();
+    alive().filter(task => task.done && task.doneAt && dayOf(task.doneAt) >= since)
+        .sort((a, b) => b.doneAt.localeCompare(a.doneAt))
+        .forEach(task => {
+            const day = dayOf(task.doneAt);
+            groups.has(day) ? groups.get(day).push(task) : groups.set(day, [task]);
+        });
+    return [...groups].map(([day, tasks]) => ({ day, tasks }));
+}
+
+// стереть совсем: корзина «Очистить»
+export async function purgeTasks(tasks) {
+    tasks.forEach(task => state.tasks.delete(task.id));
+    changed();
+    await Promise.all(tasks.map(task => remove("tasks", task.id)));
+}
+
+// ---- перенос в одно касание: какие варианты показывать, решают настройки ----
 export const POSTPONE = [
     { id: "15m", label: "+15 мин" },
     { id: "1h", label: "+1 час" },
+    { id: "3h", label: "+3 часа" },
     { id: "evening", label: "Вечером" },
     { id: "tomorrow", label: "Завтра утром" },
-    { id: "weekend", label: "В выходные" }
+    { id: "dayafter", label: "Послезавтра" },
+    { id: "weekend", label: "В выходные" },
+    { id: "week", label: "Через неделю" }
 ];
+
+export function postponeOptions() {
+    return POSTPONE.filter(option => state.settings.postpone.includes(option.id));
+}
+
+const at = (date, time) => atTime(date, ...time.split(":").map(Number));
 
 export function postponed(task, option, now = new Date()) {
     const base = hasTime(task.plannedAt) && parseDate(task.plannedAt) > now ? parseDate(task.plannedAt) : now;
+    const { postponeEvening, postponeMorning, postponeWeekend } = state.settings;
     switch (option) {
         case "15m": return toIso(new Date(base.getTime() + 15 * 60000));
         case "1h": return toIso(new Date(base.getTime() + 60 * 60000));
-        case "evening": return toIso(atTime(now.getHours() >= 19 ? addDays(now, 1) : now, 19));
-        case "tomorrow": return toIso(atTime(addDays(now, 1), 9));
+        case "3h": return toIso(new Date(base.getTime() + 3 * 60 * 60000));
+        case "evening": {
+            const tonight = at(now, postponeEvening);
+            return toIso(tonight > now ? tonight : addDays(tonight, 1));
+        }
+        case "tomorrow": return toIso(at(addDays(now, 1), postponeMorning));
+        case "dayafter": return toIso(at(addDays(now, 2), postponeMorning));
         case "weekend": {
             const saturday = addDays(now, (6 - now.getDay() + 7) % 7 || 7);
-            return toIso(atTime(saturday, 10));
+            return toIso(at(saturday, postponeWeekend));
         }
+        case "week": return toIso(at(addDays(now, 7), hasTime(task.plannedAt) ? timeOf(task.plannedAt) : postponeMorning));
     }
+}
+
+function timeOf(value) {
+    const date = parseDate(value);
+    return `${date.getHours()}:${date.getMinutes()}`;
 }

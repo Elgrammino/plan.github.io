@@ -2,6 +2,7 @@ import { getMeta, setMeta } from "./db.js";
 import { addDays, dayKey, relativeDay } from "./dates.js";
 import { openDump } from "./dump.js";
 import { openSearch } from "./search.js";
+import { journalSheet } from "./settings.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -71,6 +72,10 @@ document.querySelector(".app").addEventListener("click", event => {
         const shift = +dayButton.dataset.day;
         viewDay = shift ? addDays(viewDay, shift) : new Date();
         render();
+        return;
+    }
+    if (event.target.closest("[data-journal]")) {
+        journalSheet();
         return;
     }
     if (event.target.closest("[data-search]")) {

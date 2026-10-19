@@ -2,7 +2,8 @@
 import { addDays, dayKey, dayOf, durationText, hasTime, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
-import { POSTPONE, newTask, postponed, restoreTask, saveTask, state, trashTask } from "./store.js";
+import { newTask, postponeOptions, postponed, restoreTask, saveTask, state, trashTask } from "./store.js";
+import { editTemplate } from "./settings.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -170,6 +171,10 @@ export function editTask(task, draft = null) {
             <div class="field"><div class="label">Шаги</div>
                 <div id="checklist"></div>
                 <input class="input" id="newStep" enterkeyhint="done" placeholder="Добавить шаг" style="margin-top: var(--sp-8)">
+                <div class="chips" id="templates" style="margin-top: var(--sp-8)">
+                    ${state.templates.map(template => `<button class="chip-btn" data-template="${template.id}">+ ${esc(template.name)}</button>`).join("")}
+                    <button class="chip-btn quiet" id="saveTemplate">Сохранить как шаблон</button>
+                </div>
             </div>
 
             <div class="field"><div class="label">Заметки</div>
@@ -277,6 +282,27 @@ export function editTask(task, draft = null) {
             step.text = event.target.value;
         }
     });
+    // шаблон добавляет свои шаги, кроме уже записанных
+    $("#templates").addEventListener("click", event => {
+        const template = state.templates.find(item => item.id === event.target.closest("[data-template]")?.dataset.template);
+        if (!template) {
+            return;
+        }
+        haptic();
+        const have = new Set(steps.map(step => step.text.toLowerCase()));
+        template.steps.filter(text => !have.has(text.toLowerCase())).forEach(text => steps.push({ text, done: false }));
+        renderSteps();
+    });
+    $("#saveTemplate").addEventListener("click", () => {
+        const texts = steps.map(step => step.text.trim()).filter(Boolean);
+        if (!texts.length) {
+            showToast("Сначала добавь шаги");
+            $("#newStep").focus();
+            return;
+        }
+        editTemplate(null, () => showToast("Шаблон сохранён"), { name: $("#title").value.trim(), steps: texts });
+    });
+
     $("#newStep").addEventListener("keydown", event => {
         if (event.key === "Enter" && $("#newStep").value.trim()) {
             event.preventDefault();
@@ -351,7 +377,7 @@ export function postponeTask(task) {
         <div class="sheet-body">
             <h2>Перенести «${esc(task.title)}»</h2>
             <div class="actions">
-                ${POSTPONE.map(option => {
+                ${postponeOptions().map(option => {
                     const at = postponed(task, option.id, now);
                     return `<button class="btn ghost wide" data-option="${option.id}">${option.label}
                         <span class="mono">${esc(relativeDay(at, now))} ${timeText(at)}</span></button>`;

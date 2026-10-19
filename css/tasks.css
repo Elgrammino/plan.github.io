@@ -607,3 +607,21 @@ input[type="time"].input {
 .sheet.tall .sheet-body {
     flex: 1;
 }
+
+/* ---- шаблоны в шагах, ссылка на журнал ---- */
+.chip-btn.quiet {
+    background: none;
+    color: var(--text-2);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.journal-link {
+    display: block;
+    margin: var(--sp-24) auto 0;
+    color: var(--text-2);
+}
+
+[hidden] {
+    display: none !important;
+}

@@ -80,3 +80,62 @@
 .sheet .chips .chip-btn {
     min-height: var(--tap);
 }
+
+/* ---- настройки ---- */
+.row-label {
+    width: 96px;
+    flex: none;
+}
+
+.list-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-8) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.list-row > .input {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-row .icon-btn:disabled {
+    opacity: .3;
+}
+
+.list-row .list-shared {
+    width: 100%;
+    margin: 0;
+}
+
+/* ---- журнал сделанного ---- */
+.journal-sum {
+    display: flex;
+    gap: var(--sp-8);
+}
+
+.journal-sum > div {
+    flex: 1;
+    padding: var(--sp-12);
+    border-radius: var(--r-12);
+    background: var(--surface);
+}
+
+.journal-sum .mono {
+    display: block;
+    font-size: var(--fs-30);
+    line-height: 1.1;
+    color: var(--accent);
+}
+
+.journal-sum small {
+    font-size: var(--fs-12);
+    color: var(--text-2);
+}
+
+.journal-day {
+    display: flex;
+    justify-content: space-between;
+}

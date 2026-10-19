@@ -70,7 +70,8 @@ function dumpEntry(now) {
         const what = dump.phase === "write" ? "Продолжить выгрузку" : "Разобрать выгрузку";
         return `<button class="chip-btn today-tool" data-dump>${what}${n ? ` · <span class="mono">${n}</span>` : ""}</button>`;
     }
-    if (now.getHours() >= 19 && state.lastDumpDay !== dayKey(now)) {
+    const [hours, minutes] = state.settings.evening.split(":").map(Number);
+    if (now.getHours() * 60 + now.getMinutes() >= hours * 60 + minutes && state.lastDumpDay !== dayKey(now)) {
         return `
             <div class="card notice evening">
                 <div>Вечер. ${state.settings.dumpMin}&nbsp;минут, чтобы выгрузить из&nbsp;головы всё, что крутится, и&nbsp;спать спокойно.</div>
@@ -170,6 +171,14 @@ export function renderToday(el, viewDay) {
 
     if (anytime.length) {
         html += `<div class="label">В течение дня</div>` + anytime.map(task => row(task, { time: "" })).join("");
+    }
+
+    // тихая ссылка на журнал: сколько уже успел
+    if (isToday) {
+        const doneToday = [...state.tasks.values()].filter(task => task.done && !task.deletedAt && task.doneAt?.startsWith(key)).length;
+        if (doneToday) {
+            html += `<button class="chip-btn journal-link" data-journal>Сделано сегодня · <span class="mono">${doneToday}</span></button>`;
+        }
     }
 
     el.innerHTML = html;
