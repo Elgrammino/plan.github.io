@@ -8,7 +8,7 @@
     --alert: #DA525D;   /* Eugenia Red — дедлайн и просрочка, ~5%; к фону 4.4:1: только рамки, иконки, крупные цифры */
 
     --text-2: color-mix(in srgb, var(--text) 70%, transparent);    /* подписи */
-    --text-3: color-mix(in srgb, var(--text) 50%, transparent);    /* третичное, неактивные вкладки */
+    --text-3: color-mix(in srgb, var(--text) 60%, transparent);    /* третичное, неактивные вкладки; 5,7:1 к фону — не ниже 4,5 */
     --line: color-mix(in srgb, var(--text) 10%, transparent);      /* разделители */
     --surface: color-mix(in srgb, var(--text) 8%, transparent);    /* фон карточек и вторичных кнопок */
     --surface-2: color-mix(in srgb, var(--text) 12%, transparent); /* нажатая карточка, дорожка прогресса */

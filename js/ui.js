@@ -31,6 +31,7 @@ export function showToast(text, actionText, action, ms = 4000) {
     clearTimeout(toastTimer);
     const toast = document.createElement("div");
     toast.className = "toast";
+    toast.setAttribute("role", "status"); // VoiceOver прочитает, фокус не уводит
     toast.innerHTML = `<span>${esc(text)}</span>` + (actionText ? `<button class="btn ghost">${esc(actionText)}</button>` : "");
     toast.querySelector("button")?.addEventListener("click", () => {
         toast.remove();

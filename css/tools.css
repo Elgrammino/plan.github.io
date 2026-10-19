@@ -282,12 +282,12 @@
 }
 
 .chart .v {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-2);
 }
 
 .chart .d {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-3);
 }
 
