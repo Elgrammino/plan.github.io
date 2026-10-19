@@ -52,7 +52,7 @@ export function parseLine(line, travel = DEFAULT_TRAVEL) {
     return step.title ? step : null;
 }
 
-export function stepTime(step, anchorDate) {
+function stepTime(step, anchorDate) {
     if (step.time) {
         const [hours, minutes] = step.time.split(":").map(Number);
         return atTime(addDays(anchorDate, step.days), hours, minutes);

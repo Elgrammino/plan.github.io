@@ -6,7 +6,7 @@ import { esc, haptic, openSheet, showToast } from "./ui.js";
 const MAX = 5;
 
 // неделя — это её понедельник
-export function weekKey(date = new Date()) {
+function weekKey(date = new Date()) {
     return dayKey(addDays(date, -((date.getDay() + 6) % 7)));
 }
 

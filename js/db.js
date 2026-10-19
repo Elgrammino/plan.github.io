@@ -25,7 +25,7 @@ function upgrade(db, oldVersion, transaction) {
     }
 }
 
-export function openDb() {
+function openDb() {
     if (!dbPromise) {
         dbPromise = new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);

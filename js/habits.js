@@ -20,7 +20,7 @@ function weekCount(habit, date) {
 }
 
 // нужна ли привычка в этот день (для еженедельной — пока норма недели не набрана или уже отмечена сегодня)
-export function dueOn(habit, date) {
+function dueOn(habit, date) {
     if (habit.kind === "days") {
         return (habit.weekdays || []).includes(weekdayCode(date));
     }
@@ -89,7 +89,7 @@ export function rate(habit, now = new Date()) {
     return due ? Math.round(done / due * 100) : null;
 }
 
-export function toggleHabit(habit, key = dayKey(new Date())) {
+function toggleHabit(habit, key = dayKey(new Date())) {
     const log = state.habitLog[habit.id] || (state.habitLog[habit.id] = []);
     const index = log.indexOf(key);
     index === -1 ? log.push(key) : log.splice(index, 1);

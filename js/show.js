@@ -5,8 +5,8 @@ import { chainTasks } from "./chains.js";
 import { state } from "./store.js";
 import { esc } from "./ui.js";
 
-export const ICON_PHONE = `<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>`;
-export const ICON_ROUTE = `<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`;
+const ICON_PHONE = `<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>`;
+const ICON_ROUTE = `<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`;
 
 const FIELDS = [
     ["client", "Заказчик", "text", "Анна, свадьба"],
@@ -17,12 +17,12 @@ const FIELDS = [
     ["travelMin", "Дорога, мин", "number", "60"]
 ];
 
-export function telLink(phone) {
+function telLink(phone) {
     return "tel:" + String(phone).replace(/[^\d+]/g, "");
 }
 
 // веб-ссылка: если Яндекс Карты стоят, iOS откроет их, иначе — сайт
-export function routeLink(address) {
+function routeLink(address) {
     return "https://yandex.ru/maps/?rtext=~" + encodeURIComponent(address) + "&rtt=auto";
 }
 
@@ -33,7 +33,7 @@ export function departure(task) {
     return new Date(parseDate(task.plannedAt).getTime() - task.show.travelMin * 60000);
 }
 
-export function feeText(fee) {
+function feeText(fee) {
     return typeof fee === "number" ? fee.toLocaleString("ru-RU") + " ₽" : String(fee);
 }
 

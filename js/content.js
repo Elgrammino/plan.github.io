@@ -6,10 +6,10 @@ import { editTask } from "./sheets.js";
 import { newTask, saveTask, setDone, state } from "./store.js";
 import { esc, haptic, showToast } from "./ui.js";
 
-export const STAGES = ["идея", "сценарий", "снято", "смонтировано", "вышло"];
-export const FORMATS = [["reels", "Рилс"], ["post", "Пост"], ["stories", "Сторис"]];
+const STAGES = ["идея", "сценарий", "снято", "смонтировано", "вышло"];
+const FORMATS = [["reels", "Рилс"], ["post", "Пост"], ["stories", "Сторис"]];
 
-export const FORMAT_ICON = {
+const FORMAT_ICON = {
     reels: `<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>`,
     post: `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 15l5-4 4 3 3-2 4 3"/></svg>`,
     stories: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-dasharray="4 2.5"/></svg>`

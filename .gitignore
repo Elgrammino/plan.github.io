@@ -1,9 +1,6 @@
-# Рабочие материалы, которые не публикуем: ТЗ, бриф, стенд, чужие проекты и настройки Claude
+# Рабочие материалы, которые не публикуем: ТЗ, журнал, исходник иконки и настройки Claude
 planner-prompt.md
-design-brief.md
-design-options.html
-design-icons.html
-michaelstark.github.io-master/
+icons/icon.svg
 .agents/
 .claude/
 .playwright-cli/

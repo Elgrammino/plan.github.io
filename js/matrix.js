@@ -15,7 +15,7 @@ const QUADRANTS = [
 const GRIP = `<svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg>`;
 
 // срочно по срокам: просрочено, дедлайн в ближайшие 2 дня или в плане на сегодня-завтра
-export function isUrgent(task, now = new Date()) {
+function isUrgent(task, now = new Date()) {
     if (task.urgent !== null && task.urgent !== undefined) {
         return task.urgent;
     }

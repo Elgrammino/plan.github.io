@@ -4,7 +4,7 @@ import { getMeta, setMeta } from "./db.js";
 import { addDays, parseDate, shiftDays, toIso } from "./dates.js";
 import { discardTask, newTask, putTasks, restoreTask, setLists, state, trashTask } from "./store.js";
 
-export const FORMAT_VERSION = 1;
+const FORMAT_VERSION = 1;
 
 const ENERGY = { high: "high", mid: "mid", medium: "mid", low: "low" };
 const KINDS = ["task", "post", "show"];
