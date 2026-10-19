@@ -2,10 +2,11 @@
 import { addDays, dayKey, dayOf, durationText, hasTime, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
-import { newTask, postponeOptions, postponed, restoreTask, saveTask, state, trashTask } from "./store.js";
+import { newTask, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
 import { editTemplate } from "./settings.js";
 import { applyChain, chainTasks, planChain } from "./chains.js";
 import { readShowFields, showFieldsHtml } from "./show.js";
+import { bindPostFields, postFieldsHtml, readPostFields } from "./content.js";
 import { weekGoals } from "./goals.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
@@ -332,14 +333,17 @@ export function editTask(task, draft = null) {
         }
     });
 
-    // ---- выступление: поля видны, когда выбран этот тип ----
+    // ---- выступление и публикация: свои поля видны, когда выбран этот тип ----
     const syncKind = () => {
-        const isShow = sheet.querySelector('input[name="kind"]:checked')?.value === "show";
+        const kind = sheet.querySelector('input[name="kind"]:checked')?.value || "task";
         const box = $("#showBox");
-        if (isShow && !box.innerHTML) {
-            box.innerHTML = showFieldsHtml(task);
-        } else if (!isShow) {
-            box.innerHTML = "";
+        if (box.dataset.kind === kind) {
+            return;
+        }
+        box.dataset.kind = kind;
+        box.innerHTML = kind === "show" ? showFieldsHtml(task) : kind === "post" ? postFieldsHtml(task) : "";
+        if (kind === "post") {
+            bindPostFields(sheet);
         }
     };
     sheet.querySelectorAll('input[name="kind"]').forEach(input => input.addEventListener("change", syncKind));
@@ -415,6 +419,7 @@ export function editTask(task, draft = null) {
             due: $("#due").value ? ($("#due").value === dayOf(task.due) ? task.due : $("#due").value) : null,
             kind: checked("kind") || "task",
             show: checked("kind") === "show" ? readShowFields(sheet) : task.show,
+            ...(checked("kind") === "post" ? readPostFields(sheet) : { post: task.post, status: task.status }),
             goal: checked("goal"),
             start: $("#start").value || null,
             priority: $("#priority").checked ? "high" : "normal",
@@ -436,7 +441,12 @@ export function editTask(task, draft = null) {
         const changed = Object.keys(fields).some(key => JSON.stringify(fields[key]) !== JSON.stringify(task[key] ?? null));
         if (changed || !state.tasks.has(task.id)) {
             Object.assign(task, fields);
-            (draft ? draft.onSave : saveTask)(task);
+            // у публикации стадия «вышло» и «сделано» — одно и то же
+            if (!draft && task.kind === "post" && (task.status === "вышло") !== task.done) {
+                setDone(task, task.status === "вышло");
+            } else {
+                (draft ? draft.onSave : saveTask)(task);
+            }
         }
     }
 

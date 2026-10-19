@@ -138,6 +138,7 @@ export function newTask(fields = {}) {
         batch: null,       // пакет импорта от Claude
         repeat: null,      // { unit: "day"|"week"|"month", every, weekdays, monthDay } — см. docs/claude-format.md
         show: null,        // выступление: { client, phone, address, fee, format, travelMin }
+        post: null,        // публикация: { format: "reels"|"post"|"stories", rubric, hook, caption, hashtags }
         nextId: null,      // у выполненной повторяющейся: id следующего раза
         goal: null,        // id цели недели
         chainOf: null,     // задача цепочки: id главной задачи
@@ -184,6 +185,10 @@ function followChain(anchor) {
 export function setDone(task, done) {
     task.done = done;
     task.doneAt = done ? toIso(new Date()) : null;
+    // у публикации «сделано» и стадия «вышло» — одно и то же
+    if (task.kind === "post") {
+        task.status = done ? "вышло" : task.status === "вышло" ? "смонтировано" : task.status;
+    }
     if (done && task.repeat && !task.nextId) {
         const next = nextInstance(task);
         task.nextId = next.id;
@@ -211,6 +216,8 @@ function nextInstance(task, now = new Date()) {
         tags: [...task.tags],
         repeat: { ...task.repeat },
         show: task.show && { ...task.show },
+        post: task.post && { ...task.post },
+        status: task.kind === "post" ? "идея" : task.status,
         checklist: task.checklist.map(step => ({ text: step.text, done: false }))
     });
 }

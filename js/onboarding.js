@@ -292,8 +292,8 @@ function firstDayStep() {
 const HINTS = {
     today: "Свайп по&nbsp;задаче: вправо — готово, влево — перенести. Лупа справа — поиск.",
     inbox: "Здесь задачи без дня. «Сегодня» справа забирает задачу в&nbsp;план на&nbsp;сегодня.",
-    calendar: "Календарь пока заглушка: неделя и&nbsp;месяц появятся позже.",
-    content: "Здесь будет конвейер публикаций: идея → сценарий → снято → смонтировано → вышло.",
+    calendar: "Месяц целиком. Пустой кружок — будущий раз повтора. «+» добавит задачу на выбранный день.",
+    content: "Публикации по стадиям: идея → сценарий → снято → смонтировано → вышло. «+» — новая идея.",
     more: "Здесь напоминания, настройки, обмен с&nbsp;Claude и&nbsp;бэкап."
 };
 
@@ -313,7 +313,7 @@ export function showHint(el, screen) {
     if (hintsSeen[screen] || !HINTS[screen] || el.querySelector(".screen-hint")) {
         return;
     }
-    const anchor = el.querySelector(".bar, .subtitle");
+    const anchor = el.querySelector(".bar, .subtitle, .segmented") || el.querySelector(".title");
     const html = `<div class="card notice screen-hint"><span>${HINTS[screen]}</span><button class="chip-btn" data-hint="${screen}">Понятно</button></div>`;
     anchor ? anchor.insertAdjacentHTML("afterend", html) : el.insertAdjacentHTML("afterbegin", html);
 }

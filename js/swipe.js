@@ -21,7 +21,7 @@ export function swipeRows(container, { onRight, onLeft }) {
         if (event.button !== 0) {
             return;
         }
-        row = event.target.closest(".item[data-id]");
+        row = event.target.closest(".item[data-id]:not(.virtual)"); // будущий раз повтора не отмечается
         if (row?.classList.contains("leaving")) {
             row = null;
         }

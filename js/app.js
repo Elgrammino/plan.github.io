@@ -7,6 +7,8 @@ import { onNotifyClick, pasteFromClipboard, resumeAfterShortcut } from "./notify
 import { loadReminders, shortcutJustRan } from "./reminders.js";
 import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboarding.js";
 import { onRitualClick } from "./rituals.js";
+import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
+import { newPost, onContentClick, renderContent } from "./content.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -28,7 +30,7 @@ function showScreen(id) {
     activeScreen = id;
     screens.forEach(screen => screen.hidden = screen.id !== id);
     tabs.forEach(tab => tab.dataset.screen === id ? tab.setAttribute("aria-current", "page") : tab.removeAttribute("aria-current"));
-    document.getElementById("fab").hidden = !["today", "inbox"].includes(id);
+    document.getElementById("fab").hidden = id === "more";
     window.scrollTo(0, 0);
     render();
 }
@@ -55,6 +57,10 @@ function render() {
         }
     } else if (activeScreen === "inbox") {
         renderInbox(document.getElementById("inbox"));
+    } else if (activeScreen === "calendar") {
+        renderCalendar(document.getElementById("calendar"));
+    } else if (activeScreen === "content") {
+        renderContent(document.getElementById("content"));
     } else if (activeScreen === "more") {
         renderMore(document.getElementById("exchange"));
         renderChecks();
@@ -95,6 +101,12 @@ document.querySelector(".app").addEventListener("click", event => {
         return;
     }
     if (onNotifyClick(event) || onRitualClick(event)) {
+        return;
+    }
+    if (activeScreen === "calendar" && onCalendarClick(event, render)) {
+        return;
+    }
+    if (activeScreen === "content" && onContentClick(event, render)) {
         return;
     }
     const hint = event.target.closest("[data-hint]");
@@ -165,7 +177,9 @@ function toggle(task, holder) {
 }
 
 document.getElementById("more").addEventListener("click", onMoreClick);
-document.getElementById("fab").addEventListener("click", quickAdd);
+// «+»: на «Календаре» — задача на выбранный день, на «Контенте» — новая идея
+document.getElementById("fab").addEventListener("click", () =>
+    activeScreen === "calendar" ? addOnSelected() : activeScreen === "content" ? newPost() : quickAdd());
 
 // ---- защита данных: просим не стирать хранилище при каждом запуске ----
 async function protectStorage() {

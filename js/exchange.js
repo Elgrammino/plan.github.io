@@ -86,6 +86,25 @@ function readRepeat(value, warn) {
     return repeat;
 }
 
+const POST_FORMATS = { reels: "reels", "рилс": "reels", post: "post", "пост": "post", stories: "stories", "сторис": "stories" };
+
+function readPost(value) {
+    if (value === null || typeof value !== "object") {
+        return null;
+    }
+    const post = {};
+    const format = POST_FORMATS[String(value.format || "").toLowerCase()];
+    if (format) {
+        post.format = format;
+    }
+    ["rubric", "hook", "caption"].forEach(key => typeof value[key] === "string" && value[key].trim() && (post[key] = value[key].trim()));
+    const tags = Array.isArray(value.hashtags) ? value.hashtags.join(" ") : value.hashtags;
+    if (typeof tags === "string" && tags.trim()) {
+        post.hashtags = tags.trim();
+    }
+    return Object.keys(post).length ? post : null;
+}
+
 function readShow(value) {
     if (value === null || typeof value !== "object") {
         return null;
@@ -168,6 +187,9 @@ function readFields(raw, ctx, warn) {
             fields.repeat = repeat;
         }
     }
+    if (has("post")) {
+        fields.post = readPost(raw.post);
+    }
     if (has("show")) {
         fields.show = readShow(raw.show);
     }
@@ -179,7 +201,7 @@ const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const FIELD_NAMES = {
     title: "название", kind: "тип", list: "список", plannedAt: "когда", start: "не раньше", due: "дедлайн",
     durationMin: "длительность", energy: "энергия", priority: "важность", persistent: "настойчивость", tags: "метки",
-    notes: "заметки", checklist: "шаги", status: "стадия", repeat: "повтор", show: "выступление"
+    notes: "заметки", checklist: "шаги", status: "стадия", repeat: "повтор", show: "выступление", post: "публикация"
 };
 
 // ---- превью: что добавится, обновится, конфликтует ----
@@ -336,7 +358,7 @@ function toItem(task) {
     const put = (key, value) => value !== null && value !== undefined && value !== "" && (item[key] = value);
     put("kind", task.kind !== "task" ? task.kind : null);
     put("list", listName);
-    ["plannedAt", "start", "due", "durationMin", "energy", "status", "batch", "repeat", "show"].forEach(key => put(key, task[key]));
+    ["plannedAt", "start", "due", "durationMin", "energy", "status", "batch", "repeat", "show", "post"].forEach(key => put(key, task[key]));
     put("priority", task.priority === "high" ? "high" : null);
     put("persistent", task.persistent || null);
     put("tags", task.tags.length ? task.tags : null);
