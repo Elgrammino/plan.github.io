@@ -22,6 +22,39 @@ import { haptic, showToast } from "./ui.js";
 const version = self.APP_VERSION;
 const isStandalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
 
+// ---- iOS: окно короче экрана на высоту строки состояния ----
+// Ошибка WebKit 236445: у приложения с домашнего экрана с прозрачной строкой состояния всё, что прижато
+// к низу, висит над краем. Меряем разницу и опускаем на неё (в CSS --ios-gap); починят — станет 0.
+function measureIosGap() {
+    if (!isStandalone) {
+        return 0;
+    }
+    const portrait = matchMedia("(orientation: portrait)").matches;
+    const screenHeight = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    const gap = screenHeight - window.innerHeight;
+    // больше 120 px — это уже не строка состояния, а что-то другое: не трогаем
+    return gap > 0 && gap < 120 ? gap : 0;
+}
+
+// env() из JS не прочитать: меряем пробным элементом с такими отступами
+function safeAreas() {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+    document.body.append(probe);
+    const style = getComputedStyle(probe);
+    const result = { top: parseFloat(style.paddingTop) || 0, bottom: parseFloat(style.paddingBottom) || 0 };
+    probe.remove();
+    return result;
+}
+
+function applyIosGap() {
+    document.documentElement.style.setProperty("--ios-gap", measureIosGap() + "px");
+}
+
+applyIosGap();
+window.addEventListener("resize", applyIosGap);
+window.addEventListener("orientationchange", () => setTimeout(applyIosGap, 300));
+
 let activeScreen = "today";
 let viewDay = new Date();
 
@@ -235,6 +268,12 @@ async function renderChecks() {
             why: persisted === true ? "Система обещала не удалять хранилище."
                 : persisted === null ? "Этот браузер не умеет защищать хранилище."
                 : "Система пока не дала защиту. С домашнего экрана обычно даёт."
+        },
+        {
+            ok: true,
+            what: "Размер экрана",
+            why: `Окно ${window.innerHeight} из ${Math.max(screen.width, screen.height)} pt, поправка снизу ${measureIosGap()} pt, `
+                + `безопасные зоны сверху ${safeAreas().top} и снизу ${safeAreas().bottom} pt.`
         },
         {
             ok: offline,

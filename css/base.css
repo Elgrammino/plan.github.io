@@ -7,9 +7,31 @@
 html,
 body {
     margin: 0;
-    height: 100%;
     background: var(--bg);
     color: var(--text);
+}
+
+/* iOS, приложение с домашнего экрана и прозрачная строка состояния: документ короче экрана
+   на высоту этой строки, снизу остаётся пустая полоса. Рецепт: высота плюс верхняя безопасная зона. */
+html {
+    min-height: calc(100% + env(safe-area-inset-top, 0px));
+}
+
+body {
+    min-height: 100%;
+}
+
+/* То же для прижатого к низу: окно бывает короче экрана, и всё «bottom: 0» висит над краем.
+   --ios-gap меряет app.js (экран минус окно; 0, если ошибки нет) — опускаем ровно на столько. */
+:root .tabbar,
+:root .fab,
+:root .toast,
+:root .backdrop,
+:root .sheet,
+:root .dump,
+:root .coach {
+    /* :root поднимает приоритет над «margin: 0 auto» у шторок и экранов */
+    margin-bottom: calc(-1 * var(--ios-gap, 0px));
 }
 
 body {

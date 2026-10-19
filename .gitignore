@@ -8,3 +8,7 @@ michaelstark.github.io-master/
 .claude/
 .playwright-cli/
 ЖУРНАЛ.md
+
+# скриншоты с телефона
+*.heic
+*.HEIC
