@@ -218,3 +218,81 @@
     color: var(--text);
     margin-bottom: var(--sp-12);
 }
+
+/* ---- знакомство ---- */
+.onboarding .dots {
+    display: flex;
+    gap: 6px;
+}
+
+.onboarding .dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--surface-2);
+}
+
+.onboarding .dots i.past {
+    background: var(--text-3);
+}
+
+.onboarding .dots i.on {
+    width: 18px;
+    border-radius: 3px;
+    background: var(--accent);
+}
+
+.onboarding-body {
+    flex: 1;
+    padding: var(--sp-16) 0 var(--sp-24);
+}
+
+.onboarding-icon {
+    width: 72px;
+    height: 72px;
+    margin: var(--sp-32) 0 var(--sp-24);
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.lead {
+    font-size: var(--fs-18);
+    line-height: 1.5;
+    color: var(--text-2);
+    margin: var(--sp-8) 0 var(--sp-24);
+}
+
+.lead b {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    margin-top: var(--sp-8);
+}
+
+.onboarding-foot {
+    position: sticky;
+    bottom: 0;
+    padding-top: var(--sp-12);
+    background: var(--bg);
+}
+
+/* ---- подсказка на вкладке ---- */
+.screen-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-12);
+    margin: var(--sp-12) 0;
+    font-size: var(--fs-14);
+}
+
+.screen-hint .chip-btn {
+    flex: none;
+}

@@ -1,6 +1,7 @@
 // Настройки во вкладке «Ещё»: день и ритуалы, перенос, списки, шаблоны чек-листов, корзина.
 // И журнал сделанного по дням.
 import { addDays, dayKey, durationText, parseDate, relativeDay, timeText } from "./dates.js";
+import { openOnboarding, resetHints } from "./onboarding.js";
 import { repeatText } from "./repeat.js";
 import { editTask } from "./sheets.js";
 import {
@@ -31,10 +32,16 @@ export function settingsRows() {
             ${row("lists", "Списки", `<span class="mono">${state.lists.length}</span>`)}
             ${row("templates", "Шаблоны чек-листов", `<span class="mono">${state.templates.length}</span>`)}
             ${row("trash", "Корзина", trash ? `<span class="mono">${trash}</span>` : "пусто")}
+            ${row("onboarding", "Знакомство с&nbsp;приложением", "заново")}
         </div>`;
 }
 
 export function openSettings(key) {
+    if (key === "onboarding") {
+        resetHints();
+        openOnboarding(null, "intro-0");
+        return;
+    }
     ({ journal: journalSheet, day: daySheet, postpone: postponeSheet, lists: listsSheet, templates: templatesSheet, trash: trashSheet })[key]?.();
 }
 

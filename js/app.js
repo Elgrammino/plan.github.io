@@ -5,6 +5,7 @@ import { openSearch } from "./search.js";
 import { journalSheet } from "./settings.js";
 import { onNotifyClick, pasteFromClipboard, resumeAfterShortcut } from "./notify.js";
 import { loadReminders, shortcutJustRan } from "./reminders.js";
+import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboarding.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -57,6 +58,8 @@ function render() {
         renderMore(document.getElementById("exchange"));
         renderChecks();
     }
+    // одна подсказка на вкладке при первом открытии
+    showHint(document.getElementById(activeScreen), activeScreen);
     // спокойный счётчик на иконке: только просроченное
     const late = overdueTasks().length;
     navigator.setAppBadge?.(late).catch(() => { });
@@ -91,6 +94,11 @@ document.querySelector(".app").addEventListener("click", event => {
         return;
     }
     if (onNotifyClick(event)) {
+        return;
+    }
+    const hint = event.target.closest("[data-hint]");
+    if (hint) {
+        dismissHint(hint.dataset.hint);
         return;
     }
     if (event.target.closest("[data-journal]")) {
@@ -225,4 +233,7 @@ if ("serviceWorker" in navigator) {
 }
 
 // ---- старт ----
-Promise.all([loadStore(), loadReminders()]).then(render);
+Promise.all([loadStore(), loadReminders(), loadHints()]).then(() => {
+    render();
+    maybeStartOnboarding(showScreen);
+});

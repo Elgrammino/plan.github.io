@@ -30,10 +30,13 @@ let wakeLock = null;
 let onDone = null;
 
 // done(screen): после выгрузки открыть вкладку, например «Входящие»
-export function openDump(done) {
+// minutes: начать сразу на столько минут, без стартового экрана (онбординг)
+export function openDump(done, minutes = null) {
     onDone = done;
     const dump = state.dump;
-    if (!dump) {
+    if (!dump && minutes) {
+        begin(minutes);
+    } else if (!dump) {
         startScreen();
     } else if (dump.phase === "write") {
         writeScreen();
@@ -91,9 +94,13 @@ function startScreen() {
             state.settings.dumpMin = minutes;
             saveSettings();
         }
-        saveDump({ phase: "write", startedAt: Date.now(), minutes, thoughts: [], cards: [], history: [], accepted: 0, deleted: 0 });
-        writeScreen();
+        begin(minutes);
     });
+}
+
+function begin(minutes) {
+    saveDump({ phase: "write", startedAt: Date.now(), minutes, thoughts: [], cards: [], history: [], accepted: 0, deleted: 0 });
+    writeScreen();
 }
 
 // ---- 2. запись ----

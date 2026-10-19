@@ -86,11 +86,11 @@ export function onNotifyClick(event) {
     return true;
 }
 
-function send(items = reminderItems()) {
+export function send(items = reminderItems()) {
     sendToReminders(items).catch(() => showToast("Не получилось положить в буфер. Попробуй ещё раз."));
 }
 
-async function test() {
+export async function test() {
     const at = new Date(Date.now() + 2 * 60000);
     // тест едет вместе с настоящими напоминаниями: команда заменяет все напоминания плана
     send([...reminderItems(), { key: "plan:test:1", title: "Проверка Плана", due: toIso(at), notes: "plan:test:1" }]);
