@@ -5,6 +5,7 @@ import {
     applyPlan, batches, exportForClaude, lastImport, makeBackup, prepareBackup, preparePackage,
     readPackage, rollbackImport, saveFile, shiftBatch, trashBatch
 } from "./exchange.js";
+import { remindersCard } from "./notify.js";
 import { openSettings, settingsRows } from "./settings.js";
 import { state } from "./store.js";
 import { esc, haptic, openSheet, showToast } from "./ui.js";
@@ -29,11 +30,13 @@ function daysAgo(iso) {
 }
 
 export async function renderMore(el) {
-    const [last, lastBackupAt] = await Promise.all([lastImport(), getMeta("lastBackupAt")]);
+    const [last, lastBackupAt, reminders] = await Promise.all([lastImport(), getMeta("lastBackupAt"), remindersCard()]);
     const groups = batches();
     const backupOld = !lastBackupAt || Date.now() - new Date(lastBackupAt) > 7 * 86400000;
 
     el.innerHTML = `
+        ${reminders}
+
         <div class="label">Настройки</div>
         ${settingsRows()}
 
@@ -71,7 +74,7 @@ export async function renderMore(el) {
 }
 
 // данные в meta не вызывают onChange: перерисовываем сами
-function refresh() {
+export function refresh() {
     renderMore(document.getElementById("exchange"));
 }
 
@@ -178,7 +181,7 @@ function pasteSheet() {
 }
 
 // ---- превью ----
-function handleText(text) {
+export function handleText(text) {
     let pkg;
     try {
         pkg = readPackage(text);

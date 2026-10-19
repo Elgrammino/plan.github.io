@@ -1,6 +1,7 @@
 // Экраны «Сегодня» и «Входящие».
 import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, listName, overdueTasks, state } from "./store.js";
+import { todayButton } from "./notify.js";
 import { repeatText } from "./repeat.js";
 import { ICONS, esc } from "./ui.js";
 
@@ -113,7 +114,7 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
-        html += dumpEntry(now);
+        html += todayButton() + dumpEntry(now);
         const current = currentTask(now);
         if (current) {
             const { task, running } = current;

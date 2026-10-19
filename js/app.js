@@ -3,6 +3,8 @@ import { addDays, dayKey, relativeDay } from "./dates.js";
 import { openDump } from "./dump.js";
 import { openSearch } from "./search.js";
 import { journalSheet } from "./settings.js";
+import { onNotifyClick, pasteFromClipboard, resumeAfterShortcut } from "./notify.js";
+import { loadReminders, shortcutJustRan } from "./reminders.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -63,7 +65,21 @@ function render() {
 onChange(render);
 // раз в минуту: двигается линия «сейчас» и блок «Сейчас»
 setInterval(() => activeScreen === "today" && render(), 60000);
-document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && render());
+// возвращение в приложение: после сверки — вставить её; после долгой отлучки — предложить буфер (Siri)
+let hiddenAt = 0;
+document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+        return;
+    }
+    render();
+    if (await resumeAfterShortcut()) {
+        return;
+    }
+    if (hiddenAt && Date.now() - hiddenAt > 20000 && !shortcutJustRan() && navigator.clipboard?.readText) {
+        showToast("Надиктовал через Siri?", "Вставить", pasteFromClipboard, 6000);
+    }
+});
 
 // ---- действия с задачами (делегирование) ----
 document.querySelector(".app").addEventListener("click", event => {
@@ -72,6 +88,9 @@ document.querySelector(".app").addEventListener("click", event => {
         const shift = +dayButton.dataset.day;
         viewDay = shift ? addDays(viewDay, shift) : new Date();
         render();
+        return;
+    }
+    if (onNotifyClick(event)) {
         return;
     }
     if (event.target.closest("[data-journal]")) {
@@ -206,4 +225,4 @@ if ("serviceWorker" in navigator) {
 }
 
 // ---- старт ----
-loadStore().then(render);
+Promise.all([loadStore(), loadReminders()]).then(render);

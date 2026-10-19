@@ -139,3 +139,32 @@
     display: flex;
     justify-content: space-between;
 }
+
+/* ---- инструкция по Быстрым командам ---- */
+.guide details {
+    border-bottom: 1px solid var(--line);
+    padding: var(--sp-12) 0;
+}
+
+.guide summary {
+    font: 600 var(--fs-18)/1.3 var(--font-head);
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.guide ol {
+    padding-left: var(--sp-20);
+    margin: var(--sp-8) 0;
+}
+
+.guide li {
+    margin: var(--sp-8) 0;
+}
+
+.guide code {
+    font: var(--fs-14) var(--font-mono);
+    color: var(--accent);
+    overflow-wrap: anywhere;
+}

@@ -65,7 +65,8 @@ export function quickAdd() {
             <h2>Новая задача</h2>
             <input class="input" id="quickText" enterkeyhint="done" autocomplete="off"
                    placeholder="завтра в 19 рилс 1ч #инста">
-            <div class="preview" id="quickPreview">Можно сразу писать время, длительность и #список</div>
+            <div class="preview" id="quickPreview">Можно сразу писать время, длительность, повтор и #список</div>
+            ${navigator.clipboard?.readText ? `<button class="chip-btn" id="quickPaste" style="margin-top: var(--sp-8)">Вставить из&nbsp;буфера</button>` : ""}
             <div class="added" id="quickAdded"></div>
         </div>
         <div class="sheet-foot">
@@ -97,6 +98,14 @@ export function quickAdd() {
         input.focus();
     };
     sheet.querySelector("#quickAdd").addEventListener("click", add);
+    // продиктованное через Siri лежит в буфере
+    sheet.querySelector("#quickPaste")?.addEventListener("click", () => {
+        navigator.clipboard.readText().then(text => {
+            input.value = text.trim().split("\n")[0];
+            input.dispatchEvent(new Event("input"));
+            input.focus();
+        }).catch(() => showToast("iPhone не дал прочитать буфер"));
+    });
     input.addEventListener("keydown", event => {
         if (event.key === "Enter") {
             event.preventDefault();
