@@ -1,0 +1,220 @@
+/* Выгрузка из головы: вход на «Сегодня», экран записи, колода карточек. */
+
+/* ---- вход на «Сегодня» ---- */
+.today-tool {
+    margin-top: var(--sp-8);
+}
+
+.card.notice.evening {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-16);
+    margin-top: var(--sp-16);
+}
+
+.card.notice.evening .btn {
+    flex: none;
+}
+
+/* ---- экран поверх всего ---- */
+.dump {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: calc(var(--safe-top) + var(--sp-8)) calc(var(--safe-right) + var(--sp-20))
+             calc(var(--safe-bottom) + var(--sp-16)) calc(var(--safe-left) + var(--sp-20));
+    background: var(--bg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: appear var(--dur) var(--ease);
+}
+
+.dump::before {
+    /* фон на всю ширину, даже если экран шире 640px */
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--bg);
+}
+
+.dump-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-12);
+    min-height: var(--tap);
+    margin-left: calc(-1 * var(--sp-12));
+}
+
+.dump-count {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.chip-btn.ready {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.dump-go {
+    margin-top: var(--sp-32);
+}
+
+/* ---- запись ---- */
+.dump-timer {
+    font-size: var(--fs-48);
+    line-height: 1;
+    color: var(--accent);
+    margin: var(--sp-16) 0 var(--sp-8);
+}
+
+.dump-timer small {
+    font: var(--fs-20)/1.2 var(--font-head);
+    color: var(--text-2);
+}
+
+.dump .bar i {
+    background: var(--accent);
+    transition: width 1s linear;
+}
+
+.dump-hint {
+    display: block;
+    width: 100%;
+    min-height: 3em;
+    text-align: left;
+    font: italic var(--fs-18)/1.4 var(--font-head);
+    color: var(--text-2);
+    margin: var(--sp-16) 0;
+}
+
+.dump-hint.fresh {
+    animation: appear 600ms var(--ease);
+}
+
+.dump-input {
+    font-size: var(--fs-18);
+    min-height: 56px;
+}
+
+.dump-list {
+    margin-top: var(--sp-16);
+    color: var(--text-2);
+}
+
+.dump-list div {
+    padding: var(--sp-8) 0;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.dump-list div:first-child {
+    color: var(--text);
+    animation: appear var(--dur) var(--ease);
+}
+
+/* ---- колода ---- */
+.deck {
+    position: relative;
+    flex: 1;
+    min-height: 260px;
+    max-height: 420px;
+    margin: var(--sp-24) 0 var(--sp-16);
+}
+
+.deck-card {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--sp-12);
+    padding: var(--sp-24);
+    border-radius: var(--r-16);
+    background: color-mix(in srgb, var(--text) 8%, var(--bg));
+    border: 1.5px solid var(--line);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.deck-card.behind {
+    transform: translateY(12px) scale(.95);
+    opacity: .5;
+}
+
+.deck-card.dragging {
+    transition: border-color var(--dur-fast) var(--ease);
+}
+
+.deck-card.gone {
+    opacity: 0;
+}
+
+.deck-card .name {
+    font: 600 var(--fs-24)/1.25 var(--font-head);
+    overflow-wrap: anywhere;
+}
+
+.deck-card .info {
+    font-size: var(--fs-16);
+    color: var(--text-2);
+}
+
+.deck-card .source {
+    font-size: var(--fs-14);
+    color: var(--text-3);
+    overflow-wrap: anywhere;
+}
+
+/* куда улетит карточка */
+.deck-card::after {
+    position: absolute;
+    top: var(--sp-16);
+    font-size: var(--fs-14);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.deck-card[data-dir="right"] {
+    border-color: var(--accent);
+}
+
+.deck-card[data-dir="right"]::after {
+    content: "В план";
+    left: var(--sp-24);
+    color: var(--accent);
+}
+
+.deck-card[data-dir="left"] {
+    border-color: var(--alert);
+}
+
+.deck-card[data-dir="left"]::after {
+    content: "Удалить";
+    right: var(--sp-24);
+    color: var(--text-2);
+}
+
+.deck-tip {
+    margin: auto 0 var(--sp-16); /* подсказка и кнопки внизу, под большим пальцем */
+    text-align: center;
+    font-size: var(--fs-14);
+    color: var(--text-3);
+}
+
+.dump .empty {
+    flex: 1;
+    padding-top: var(--sp-48);
+}
+
+.dump .empty .title {
+    color: var(--text);
+    margin-bottom: var(--sp-12);
+}

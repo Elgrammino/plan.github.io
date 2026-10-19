@@ -58,6 +58,24 @@ function weekdayLine(date, isToday) {
     return prefix + (prefix ? weekday : weekday.charAt(0).toUpperCase() + weekday.slice(1));
 }
 
+// вход в выгрузку: продолжить черновик, вечером позвать, иначе тихая кнопка
+function dumpEntry(now) {
+    const dump = state.dump;
+    if (dump) {
+        const n = dump.phase === "write" ? dump.thoughts.length : dump.cards.length;
+        const what = dump.phase === "write" ? "Продолжить выгрузку" : "Разобрать выгрузку";
+        return `<button class="chip-btn today-tool" data-dump>${what}${n ? ` · <span class="mono">${n}</span>` : ""}</button>`;
+    }
+    if (now.getHours() >= 19 && state.lastDumpDay !== dayKey(now)) {
+        return `
+            <div class="card notice evening">
+                <div>Вечер. ${state.settings.dumpMin}&nbsp;минут, чтобы выгрузить из&nbsp;головы всё, что крутится, и&nbsp;спать спокойно.</div>
+                <button class="btn primary" data-dump>Выгрузить</button>
+            </div>`;
+    }
+    return `<button class="chip-btn today-tool" data-dump>Выгрузка из&nbsp;головы</button>`;
+}
+
 function minutesBetween(a, b) {
     return Math.round((b - a) / 60000);
 }
@@ -89,6 +107,7 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
+        html += dumpEntry(now);
         const current = currentTask(now);
         if (current) {
             const { task, running } = current;

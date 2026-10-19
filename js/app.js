@@ -1,5 +1,6 @@
 import { getMeta, setMeta } from "./db.js";
 import { addDays, dayKey } from "./dates.js";
+import { openDump } from "./dump.js";
 import { renderInbox, renderToday } from "./screens.js";
 import { editTask, postponeTask, quickAdd } from "./sheets.js";
 import { loadStore, onChange, overdueTasks, saveTask, setDone, state } from "./store.js";
@@ -66,6 +67,11 @@ document.querySelector(".app").addEventListener("click", event => {
         const shift = +dayButton.dataset.day;
         viewDay = shift ? addDays(viewDay, shift) : new Date();
         render();
+        return;
+    }
+    if (event.target.closest("[data-dump]")) {
+        haptic();
+        openDump(showScreen);
         return;
     }
     const button = event.target.closest("[data-action]");

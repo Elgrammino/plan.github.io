@@ -102,7 +102,8 @@ export function quickAdd() {
 }
 
 // ---- редактирование ----
-export function editTask(task) {
+// draft: задача ещё не в плане (карточка выгрузки) — сохранение и удаление решает вызывающий
+export function editTask(task, draft = null) {
     const lists = [["", "Без списка"], ...state.lists.map(list => [list.id, esc(list.name)])];
     const plannedDay = dayOf(task.plannedAt) || "";
     const plannedTime = hasTime(task.plannedAt) ? timeText(task.plannedAt) : "";
@@ -158,7 +159,7 @@ export function editTask(task) {
         </div>
         <div class="sheet-foot">
             <button class="icon-btn" id="delete" aria-label="Удалить">${ICONS.trash}</button>
-            <button class="btn ghost grow" id="postpone">Перенести</button>
+            ${draft ? "" : `<button class="btn ghost grow" id="postpone">Перенести</button>`}
             <button class="btn primary grow" data-close>Готово</button>
         </div>`, { onClose: save });
 
@@ -250,7 +251,7 @@ export function editTask(task) {
         const changed = Object.keys(fields).some(key => JSON.stringify(fields[key]) !== JSON.stringify(task[key] ?? null));
         if (changed || !state.tasks.has(task.id)) {
             Object.assign(task, fields);
-            saveTask(task);
+            (draft ? draft.onSave : saveTask)(task);
         }
     }
 
@@ -258,12 +259,14 @@ export function editTask(task) {
     $("#delete").addEventListener("click", () => {
         deleted = true;
         close();
-        if (state.tasks.has(task.id)) {
+        if (draft) {
+            draft.onDelete();
+        } else if (state.tasks.has(task.id)) {
             trashTask(task);
             showToast("Задача в корзине", "Вернуть", () => restoreTask(task));
         }
     });
-    $("#postpone").addEventListener("click", () => {
+    $("#postpone")?.addEventListener("click", () => {
         save();
         deleted = true; // уже сохранено, повторно не сохранять при закрытии
         close();

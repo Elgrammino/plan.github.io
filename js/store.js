@@ -1,11 +1,13 @@
 // Задачи и списки в памяти плюс запись в IndexedDB. Экраны читают отсюда и вызывают save/remove.
-import { getAll, getMeta, put, remove } from "./db.js";
+import { getAll, getMeta, put, remove, setMeta } from "./db.js";
 import { addDays, atTime, dayKey, dayOf, hasTime, parseDate, toIso } from "./dates.js";
 
 export const state = {
     tasks: new Map(),
     lists: [],
-    settings: { dayLimitMin: 7 * 60 }
+    settings: { dayLimitMin: 7 * 60, dumpMin: 10 },
+    dump: null,         // черновик выгрузки из головы: переживает закрытие приложения
+    lastDumpDay: null   // день последней законченной выгрузки
 };
 
 const listeners = new Set();
@@ -19,7 +21,9 @@ function changed() {
 }
 
 export async function loadStore() {
-    const [tasks, lists, settings] = await Promise.all([getAll("tasks"), getAll("lists"), getMeta("settings")]);
+    const [tasks, lists, settings, dump, lastDumpDay] = await Promise.all([
+        getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay")
+    ]);
     // корзина хранит задачи 30 дней
     const purgeBefore = toIso(addDays(new Date(), -30));
     tasks.forEach(task => {
@@ -31,6 +35,27 @@ export async function loadStore() {
     });
     state.lists = lists.sort((a, b) => a.order - b.order);
     Object.assign(state.settings, settings);
+    state.dump = dump || null;
+    state.lastDumpDay = lastDumpDay || null;
+}
+
+export function saveSettings() {
+    changed();
+    return setMeta("settings", state.settings);
+}
+
+// ---- выгрузка из головы ----
+export function saveDump(dump) {
+    state.dump = dump;
+    changed();
+    return setMeta("dump", dump);
+}
+
+export function finishDump() {
+    state.dump = null;
+    state.lastDumpDay = dayKey(new Date());
+    changed();
+    return Promise.all([setMeta("dump", null), setMeta("lastDumpDay", state.lastDumpDay)]);
 }
 
 // ---- задачи ----
@@ -79,6 +104,13 @@ export function setDone(task, done) {
 export function trashTask(task) {
     task.deletedAt = toIso(new Date());
     return saveTask(task);
+}
+
+// стереть совсем, без корзины: только для «Отменить» сразу после создания
+export function discardTask(task) {
+    state.tasks.delete(task.id);
+    changed();
+    return remove("tasks", task.id);
 }
 
 export function restoreTask(task) {
