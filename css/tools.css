@@ -304,3 +304,103 @@
     font-size: var(--fs-20);
     line-height: 1.3;
 }
+
+/* ---- обучение: тренер над кнопкой «+» ---- */
+.coach {
+    position: fixed;
+    left: calc(var(--safe-left) + var(--sp-12));
+    right: calc(var(--safe-right) + var(--sp-12));
+    bottom: calc(var(--safe-bottom) + var(--tabbar-h) + var(--sp-16) + 56px + var(--sp-12));
+    max-width: 520px;
+    margin: 0 auto;
+    padding: var(--sp-12) var(--sp-16) var(--sp-16);
+    border-radius: var(--r-16);
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+    border: 1.5px solid var(--accent-line);
+    animation: slide-up var(--dur) var(--ease);
+}
+
+.coach-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: -8px -12px 0 0;
+}
+
+.coach-part {
+    font-size: var(--fs-12);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-2);
+}
+
+.coach-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--surface-2);
+    overflow: hidden;
+}
+
+.coach-bar i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width var(--dur) var(--ease);
+}
+
+.coach-title {
+    font: 600 var(--fs-18)/1.25 var(--font-head);
+    margin: var(--sp-8) 0 var(--sp-4);
+}
+
+.coach-text {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.coach-btns {
+    display: flex;
+    gap: var(--sp-8);
+    margin-top: var(--sp-12);
+}
+
+.coach-btns .btn {
+    flex: 1;
+    min-height: 40px;
+}
+
+/* шаг засчитан */
+.coach.coach-ok {
+    border-color: var(--accent);
+}
+
+.coach.coach-ok .coach-title::after {
+    content: " — получилось";
+    color: var(--accent);
+}
+
+/* «Показать»: что нажать */
+.coach-target {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: var(--r-12);
+    animation: coach-pulse 1s var(--ease) 3;
+}
+
+@keyframes coach-pulse {
+    50% { outline-offset: 8px; outline-color: transparent; }
+}
+
+.tutorial-chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.routine > div {
+    line-height: 1.45;
+}
+
+.routine b {
+    color: var(--accent);
+    font-weight: 600;
+}

@@ -11,6 +11,7 @@ import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
 import { newPost, onContentClick, renderContent } from "./content.js";
 import { openFocus, startFocus } from "./focus.js";
 import { onHabitClick } from "./habits.js";
+import { loadTutorial, resumeTutorial } from "./tutorial.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -103,6 +104,10 @@ document.querySelector(".app").addEventListener("click", event => {
         return;
     }
     if (onNotifyClick(event) || onRitualClick(event) || onHabitClick(event)) {
+        return;
+    }
+    if (event.target.closest("[data-tutorial-open]")) {
+        resumeTutorial();
         return;
     }
     if (event.target.closest("[data-focus-open]")) {
@@ -257,7 +262,8 @@ if ("serviceWorker" in navigator) {
 }
 
 // ---- старт ----
-Promise.all([loadStore(), loadReminders(), loadHints()]).then(() => {
+Promise.all([loadStore(), loadReminders(), loadHints()]).then(async () => {
+    await loadTutorial();
     render();
     maybeStartOnboarding(showScreen);
 });

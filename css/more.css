@@ -168,3 +168,67 @@
     color: var(--accent);
     overflow-wrap: anywhere;
 }
+
+/* ---- мастер Быстрых команд ---- */
+.guide summary {
+    justify-content: space-between;
+    gap: var(--sp-12);
+}
+
+.guide-count {
+    font: var(--fs-14) var(--font-mono);
+    color: var(--text-2);
+}
+
+.guide details.complete > summary {
+    color: var(--text-2);
+}
+
+.guide details.complete .guide-count {
+    color: var(--accent);
+}
+
+.guide-step {
+    padding: var(--sp-8) 0;
+    border-top: 1px solid var(--line);
+}
+
+.guide-step label {
+    display: flex;
+    gap: var(--sp-12);
+    align-items: flex-start;
+}
+
+.guide-step input {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin: 1px 0 0;
+    accent-color: var(--accent);
+}
+
+.guide-step input:checked + span {
+    color: var(--text-3);
+}
+
+.guide .alt {
+    border: 0;
+    padding: 0 0 0 34px;
+}
+
+.guide .alt summary {
+    min-height: 32px;
+    font: var(--fs-14) var(--font-body);
+    color: var(--accent);
+}
+
+.guide .alt p {
+    margin: 0 0 var(--sp-4);
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.guide-step b {
+    font-weight: 600;
+    color: var(--text);
+}

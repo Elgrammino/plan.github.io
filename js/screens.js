@@ -4,6 +4,7 @@ import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listNa
 import { todayButton } from "./notify.js";
 import { departure, showDayBlock } from "./show.js";
 import { focusChip } from "./focus.js";
+import { tutorialChip } from "./tutorial.js";
 import { habitsStrip } from "./habits.js";
 import { morningEntry, eveningEntry, goalsChip } from "./rituals.js";
 import { repeatText } from "./repeat.js";
@@ -114,7 +115,7 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
-        html += `<div class="today-tools">${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
+        html += `<div class="today-tools">${tutorialChip()}${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
             + habitsStrip(now) + morningEntry(now) + eveningEntry(now) + showDayBlock(now);
         const current = currentTask(now);
         if (current) {

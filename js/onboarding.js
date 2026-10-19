@@ -7,6 +7,7 @@ import { openDump } from "./dump.js";
 import { exportForClaude, makeBackup, saveFile } from "./exchange.js";
 import { guideSheet, send, test } from "./notify.js";
 import { openSettings } from "./settings.js";
+import { startTutorial } from "./tutorial.js";
 import { dayTasks, inboxTasks, overdueTasks, saveSettings, state } from "./store.js";
 import { ICONS, esc, haptic, showToast } from "./ui.js";
 
@@ -192,6 +193,7 @@ async function setupStep() {
         } else if (act === "test") {
             await test();
         } else if (act === "testYes") {
+            state.remindersOk = true;
             await setMeta("remindersOk", true);
         } else if (act === "testNo") {
             guideSheet("help");
@@ -272,9 +274,15 @@ function firstDayStep() {
             <button class="btn ghost wide" id="send">Отправить в&nbsp;Напоминания</button>
             <button class="btn ghost wide" id="claude">Отдать Claude на&nbsp;разбор</button>
             <p class="hint">Claude получит план в&nbsp;буфере: вставь его в&nbsp;чат вместе с&nbsp;форматом («Ещё → Скопировать формат») и&nbsp;попроси разложить. Ответ вставишь в&nbsp;«Ещё → Вставить текст».</p>
+            <button class="btn primary wide" id="tutorial">Пройти обучение по&nbsp;приложению</button>
+            <p class="hint">17 коротких шагов: делаешь сам, приложение подсказывает. В&nbsp;конце — готовый план и&nbsp;памятка, как ему следовать.</p>
         </div>`, `<button class="btn ghost" data-back>Назад</button><button class="btn primary" id="done">Готово</button>`);
     $("[data-back]").addEventListener("click", () => go(current - 1));
     $("#done").addEventListener("click", () => finish("today"));
+    $("#tutorial").addEventListener("click", async () => {
+        await finish("today");
+        startTutorial();
+    });
     $("#toInbox")?.addEventListener("click", () => finish("inbox"));
     $("#send").addEventListener("click", () => {
         haptic();
@@ -316,6 +324,13 @@ export function showHint(el, screen) {
     const anchor = el.querySelector(".bar, .subtitle, .segmented") || el.querySelector(".title");
     const html = `<div class="card notice screen-hint"><span>${HINTS[screen]}</span><button class="chip-btn" data-hint="${screen}">Понятно</button></div>`;
     anchor ? anchor.insertAdjacentHTML("afterend", html) : el.insertAdjacentHTML("afterbegin", html);
+}
+
+// обучение само ведёт по экранам — подсказки вкладок ему не нужны
+export function hideAllHints() {
+    Object.keys(HINTS).forEach(screen => hintsSeen[screen] = true);
+    document.querySelectorAll(".screen-hint").forEach(hint => hint.remove());
+    return setMeta("hintsSeen", hintsSeen);
 }
 
 export function dismissHint(screen) {

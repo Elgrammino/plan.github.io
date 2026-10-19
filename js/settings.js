@@ -3,6 +3,7 @@
 import { addDays, dayKey, durationText, parseDate, relativeDay, timeText } from "./dates.js";
 import { parseLine } from "./chains.js";
 import { openOnboarding, resetHints } from "./onboarding.js";
+import { startTutorial } from "./tutorial.js";
 import { repeatText } from "./repeat.js";
 import { editTask } from "./sheets.js";
 import {
@@ -34,11 +35,16 @@ export function settingsRows() {
             ${row("templates", "Шаблоны чек-листов", `<span class="mono">${state.templates.length}</span>`)}
             ${row("chains", "Шаблоны цепочек", `<span class="mono">${state.chains.length}</span>`)}
             ${row("trash", "Корзина", trash ? `<span class="mono">${trash}</span>` : "пусто")}
+            ${row("tutorial", "Обучение по&nbsp;приложению", "17 шагов")}
             ${row("onboarding", "Знакомство с&nbsp;приложением", "заново")}
         </div>`;
 }
 
 export function openSettings(key) {
+    if (key === "tutorial") {
+        startTutorial();
+        return;
+    }
     if (key === "onboarding") {
         resetHints();
         openOnboarding(null, "intro-0");

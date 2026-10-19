@@ -352,12 +352,20 @@ export function editTask(task, draft = null) {
     syncKind();
 
     // ---- цепочка: шаги от этой задачи, едут следом при переносе ----
+    // перерисовываем, только если блок правда меняется: поле времени шлёт change при потере фокуса,
+    // и перерисовка под пальцем съела бы нажатие на «+ Выступление»
+    let chainKey = null;
     const renderChain = (picked = null) => {
         const box = $("#chain");
         if (!box) {
             return;
         }
         const children = chainTasks(task);
+        const key = `${children.length}|${hasTime(read().plannedAt)}|${picked?.id || ""}`;
+        if (key === chainKey) {
+            return;
+        }
+        chainKey = key;
         if (children.length) {
             box.innerHTML = children.map(child => `
                 <div class="chain-step ${child.done ? "done" : ""}">
