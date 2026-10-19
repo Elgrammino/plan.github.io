@@ -1,6 +1,8 @@
 import { getMeta, setMeta } from "./db.js";
-import { addDays, dayKey } from "./dates.js";
+import { addDays, dayKey, relativeDay } from "./dates.js";
 import { openDump } from "./dump.js";
+import { openSearch } from "./search.js";
+import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
 import { editTask, postponeTask, quickAdd } from "./sheets.js";
@@ -71,6 +73,10 @@ document.querySelector(".app").addEventListener("click", event => {
         render();
         return;
     }
+    if (event.target.closest("[data-search]")) {
+        openSearch();
+        return;
+    }
     if (event.target.closest("[data-dump]")) {
         haptic();
         openDump(showScreen);
@@ -104,6 +110,11 @@ document.querySelector(".app").addEventListener("click", event => {
     }
 });
 
+swipeRows(document.querySelector(".app"), {
+    onRight: row => toggle(state.tasks.get(row.dataset.id), row),
+    onLeft: row => postponeTask(state.tasks.get(row.dataset.id))
+});
+
 function toggle(task, holder) {
     haptic();
     if (task.done) {
@@ -114,7 +125,9 @@ function toggle(task, holder) {
     holder.classList.add("leaving");
     setTimeout(() => {
         setDone(task, true);
-        showToast("Готово", "Вернуть", () => setDone(task, false));
+        const next = task.nextId && state.tasks.get(task.nextId);
+        const text = next ? `Готово. Следующий раз ${relativeDay(next.plannedAt)}` : "Готово";
+        showToast(text, "Вернуть", () => setDone(task, false));
     }, 300);
 }
 

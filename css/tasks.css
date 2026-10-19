@@ -504,3 +504,106 @@ input[type="time"].input {
     font-weight: 400;
     font-size: var(--fs-14);
 }
+
+/* ---- повтор ---- */
+.row > .input.every {
+    flex: none;
+    width: 72px;
+    text-align: center;
+}
+
+#repeatMore[hidden],
+#weekdays[hidden] {
+    display: none;
+}
+
+/* ---- свайп по строке: вправо — готово, влево — перенести ---- */
+.item {
+    position: relative;
+    touch-action: pan-y;
+}
+
+.item > * {
+    transition: transform var(--dur) var(--ease);
+}
+
+.item.swiping {
+    overflow: hidden;
+}
+
+.item.swiping > * {
+    transform: translateX(var(--dx, 0));
+    transition: none;
+}
+
+.item.swiping::before {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--fs-12);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.item.swiping[data-dir="right"]::before {
+    content: "Готово";
+    left: 0;
+}
+
+.item.swiping[data-dir="left"]::before {
+    content: "Перенести";
+    right: 0;
+}
+
+.item.swiping[data-ready]::before {
+    color: var(--accent);
+}
+
+/* ---- поиск ---- */
+.sheet.tall {
+    height: calc(100% - var(--safe-top) - var(--sp-24) - var(--kb, 0px));
+}
+
+.result {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--sp-12) 0;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.result .sub,
+.result .snippet {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.result .snippet {
+    margin-top: var(--sp-4);
+    color: var(--text-3);
+}
+
+.result.done .name {
+    color: var(--text-3);
+    text-decoration: line-through;
+}
+
+.result mark {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 3px;
+}
+
+.search-empty {
+    color: var(--text-2);
+    text-align: center;
+    margin: var(--sp-32) 0;
+}
+
+.sheet.tall .sheet-body {
+    flex: 1;
+}

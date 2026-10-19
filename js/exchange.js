@@ -1,7 +1,7 @@
 // Обмен с Claude и бэкап: разбор пакета, превью, применение, откат, пакеты, выгрузка.
 // Схема пакета описана в docs/claude-format.md — менять их вместе.
 import { getMeta, setMeta } from "./db.js";
-import { addDays, dayKey, hasTime, parseDate, toIso } from "./dates.js";
+import { addDays, parseDate, shiftDays, toIso } from "./dates.js";
 import { discardTask, newTask, putTasks, restoreTask, setLists, state, trashTask } from "./store.js";
 
 export const FORMAT_VERSION = 1;
@@ -312,21 +312,13 @@ function batchTasks(batch) {
     return [...state.tasks.values()].filter(task => task.batch === batch && !task.deletedAt);
 }
 
-function shiftDate(value, days) {
-    if (!value) {
-        return value;
-    }
-    const date = addDays(parseDate(value), days);
-    return hasTime(value) ? toIso(date) : dayKey(date);
-}
-
 export function shiftBatch(batch, days) {
     const now = toIso(new Date());
     return putTasks(batchTasks(batch).map(task => ({
         ...task,
-        plannedAt: shiftDate(task.plannedAt, days),
-        start: shiftDate(task.start, days),
-        due: shiftDate(task.due, days),
+        plannedAt: shiftDays(task.plannedAt, days),
+        start: shiftDays(task.start, days),
+        due: shiftDays(task.due, days),
         updatedAt: now
     })));
 }

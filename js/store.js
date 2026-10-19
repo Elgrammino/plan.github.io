@@ -1,6 +1,7 @@
 // Задачи и списки в памяти плюс запись в IndexedDB. Экраны читают отсюда и вызывают save/remove.
 import { getAll, getMeta, put, remove, setMeta } from "./db.js";
-import { addDays, atTime, dayKey, dayOf, hasTime, parseDate, toIso } from "./dates.js";
+import { addDays, atTime, dayKey, dayOf, hasTime, parseDate, shiftDays, toIso } from "./dates.js";
+import { daysBetween, nextAfterDone } from "./repeat.js";
 
 export const state = {
     tasks: new Map(),
@@ -12,8 +13,10 @@ export const state = {
 
 const listeners = new Set();
 
+// возвращает функцию отписки
 export function onChange(listener) {
     listeners.add(listener);
+    return () => listeners.delete(listener);
 }
 
 function changed() {
@@ -80,6 +83,7 @@ export function newTask(fields = {}) {
         batch: null,       // пакет импорта от Claude
         repeat: null,      // { unit: "day"|"week"|"month", every, weekdays, monthDay } — см. docs/claude-format.md
         show: null,        // выступление: { client, phone, address, fee, format, travelMin }
+        nextId: null,      // у выполненной повторяющейся: id следующего раза
         importedAt: null,  // когда задача последний раз пришла из файла
         imported: null,    // поля, какими они пришли из файла: по ним видно, что ты менял сам
         done: false,
@@ -98,10 +102,39 @@ export async function saveTask(task) {
     await put("tasks", task);
 }
 
+// у повторяющейся задачи выполнение создаёт следующий раз, а «Вернуть» его убирает
 export function setDone(task, done) {
     task.done = done;
     task.doneAt = done ? toIso(new Date()) : null;
+    if (done && task.repeat && !task.nextId) {
+        const next = nextInstance(task);
+        task.nextId = next.id;
+        saveTask(next);
+    } else if (!done && task.nextId) {
+        const next = state.tasks.get(task.nextId);
+        if (next && !next.done) {
+            discardTask(next);
+        }
+        task.nextId = null;
+    }
     return saveTask(task);
+}
+
+function nextInstance(task, now = new Date()) {
+    const planned = task.plannedAt ? parseDate(task.plannedAt) : null;
+    const day = nextAfterDone(task.repeat, planned, now);
+    const shift = daysBetween(planned || now, day);
+    const { id, createdAt, updatedAt, done, doneAt, nextId, importedAt, imported, deletedAt, ...fields } = task;
+    return newTask({
+        ...fields,
+        plannedAt: !planned ? dayKey(day) : shiftDays(task.plannedAt, shift),
+        due: shiftDays(task.due, shift),
+        start: shiftDays(task.start, shift),
+        tags: [...task.tags],
+        repeat: { ...task.repeat },
+        show: task.show && { ...task.show },
+        checklist: task.checklist.map(step => ({ text: step.text, done: false }))
+    });
 }
 
 // импорт, откат, сдвиг пакета: много задач сразу, даты правки ставит вызывающий

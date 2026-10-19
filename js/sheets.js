@@ -1,6 +1,7 @@
 // Шторки: быстрое добавление, редактирование задачи, перенос.
 import { addDays, dayKey, dayOf, durationText, hasTime, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
+import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
 import { POSTPONE, newTask, postponed, restoreTask, saveTask, state, trashTask } from "./store.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
@@ -43,6 +44,9 @@ function describe(fields) {
     }
     if (fields.durationMin) {
         parts.push(durationText(fields.durationMin));
+    }
+    if (fields.repeat) {
+        parts.push("↻ " + repeatText(fields.repeat));
     }
     if (fields.list) {
         parts.push(state.lists.find(list => list.id === fields.list)?.name);
@@ -123,6 +127,21 @@ export function editTask(task, draft = null) {
                 </div>
             </div>
 
+            <div class="field"><div class="label">Повтор</div>
+                ${chips("repeatUnit", [["", "Нет"], ["day", "День"], ["week", "Неделя"], ["month", "Месяц"]], task.repeat?.unit || "")}
+                <div id="repeatMore">
+                    <div class="row" style="margin-top: var(--sp-8)">
+                        <span class="text-2">Раз в</span>
+                        <input class="input every" type="number" inputmode="numeric" min="1" max="99" id="every" value="${task.repeat?.every || 1}" aria-label="Как часто">
+                        <span class="text-2" id="everyUnit"></span>
+                    </div>
+                    <div class="chips" id="weekdays" style="margin-top: var(--sp-8)">${WEEKDAYS.map(code => `
+                        <label class="chip"><input type="checkbox" value="${code}" ${task.repeat?.weekdays?.includes(code) ? "checked" : ""}><span>${WEEKDAY_SHORT[code]}</span></label>`).join("")}
+                    </div>
+                    <div class="preview" id="repeatText"></div>
+                </div>
+            </div>
+
             <div class="field"><div class="label">Длительность</div>
                 ${chips("duration", DURATIONS.map(min => [String(min), durationText(min)]), String(task.durationMin || ""))}
             </div>
@@ -192,6 +211,54 @@ export function editTask(task, draft = null) {
         }
     });
 
+    // повтор: подробности видны, только когда он выбран
+    const plural = (n, forms) => forms[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2];
+    const UNIT_FORMS = { day: ["день", "дня", "дней"], week: ["неделю", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] };
+    const syncRepeat = () => {
+        const repeat = readRepeat();
+        $("#repeatMore").hidden = !repeat;
+        if (!repeat) {
+            return;
+        }
+        $("#weekdays").hidden = repeat.unit !== "week";
+        $("#everyUnit").textContent = plural(repeat.every || 1, UNIT_FORMS[repeat.unit]);
+        $("#repeatText").textContent = repeatText(repeat);
+    };
+    sheet.querySelectorAll('input[name="repeatUnit"]').forEach(input => input.addEventListener("change", () => {
+        // неделя без отмеченных дней: отмечаем день задачи
+        if (input.value === "week" && !sheet.querySelector("#weekdays input:checked")) {
+            const code = weekdayCode($("#day").value ? new Date($("#day").value + "T12:00") : new Date());
+            sheet.querySelector(`#weekdays input[value="${code}"]`).checked = true;
+        }
+        syncRepeat();
+    }));
+    ["#every", "#weekdays", "#day"].forEach(selector => $(selector).addEventListener("change", syncRepeat));
+    $("#every").addEventListener("input", syncRepeat);
+    syncRepeat();
+
+    function readRepeat() {
+        const unit = sheet.querySelector('input[name="repeatUnit"]:checked')?.value;
+        if (!unit) {
+            return null;
+        }
+        const repeat = { unit };
+        const every = Math.max(1, Math.min(99, Math.round(+$("#every").value) || 1));
+        if (every > 1) {
+            repeat.every = every;
+        }
+        if (unit === "week") {
+            const days = [...sheet.querySelectorAll("#weekdays input:checked")].map(input => input.value);
+            if (days.length) {
+                repeat.weekdays = days;
+            }
+        }
+        if (unit === "month") {
+            const day = $("#day").value;
+            repeat.monthDay = day ? +day.slice(8) : task.repeat?.monthDay || new Date().getDate();
+        }
+        return repeat;
+    }
+
     // шаги
     const steps = task.checklist.map(step => ({ ...step }));
     const renderSteps = () => {
@@ -220,7 +287,9 @@ export function editTask(task, draft = null) {
     });
 
     function read() {
-        const day = $("#day").value;
+        const repeat = readRepeat();
+        // повтор без даты: первый подходящий день
+        const day = $("#day").value || (repeat ? dayKey(firstDate(repeat)) : "");
         const time = $("#time").value;
         const checked = name => sheet.querySelector(`input[name="${name}"]:checked`)?.value || null;
         const pending = $("#newStep").value.trim();
@@ -228,6 +297,7 @@ export function editTask(task, draft = null) {
             title: $("#title").value.trim(),
             plannedAt: !day ? null : time ? toIso(new Date(`${day}T${time}`)) : day,
             durationMin: +checked("duration") || null,
+            repeat,
             energy: checked("energy"),
             list: checked("list") || null,
             due: $("#due").value || null,

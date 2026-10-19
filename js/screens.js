@@ -1,6 +1,7 @@
 // Экраны «Сегодня» и «Входящие».
 import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, listName, overdueTasks, state } from "./store.js";
+import { repeatText } from "./repeat.js";
 import { ICONS, esc } from "./ui.js";
 
 const ENERGY_DOTS = { low: "●", mid: "●●", high: "●●●" };
@@ -15,6 +16,9 @@ function sub(task, { showDay = false } = {}) {
     }
     if (task.durationMin) {
         parts.push(durationText(task.durationMin));
+    }
+    if (task.repeat) {
+        parts.push("↻ " + esc(repeatText(task.repeat)));
     }
     if (task.checklist.length) {
         parts.push(`${task.checklist.filter(step => step.done).length} из ${task.checklist.length}`);
@@ -95,6 +99,7 @@ export function renderToday(el, viewDay) {
     let html = `
         <div class="day-head">
             <h1 class="title">${esc(viewDay.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }))}</h1>
+            <button class="icon-btn" data-search aria-label="Поиск">${ICONS.search}</button>
             <button class="icon-btn" data-day="-1" aria-label="Предыдущий день">${ICONS.prev}</button>
             <button class="icon-btn" data-day="1" aria-label="Следующий день">${ICONS.next}</button>
         </div>
@@ -174,7 +179,10 @@ export function renderToday(el, viewDay) {
 export function renderInbox(el) {
     const tasks = inboxTasks();
     el.innerHTML = `
-        <h1 class="title">Входящие</h1>
+        <div class="day-head">
+            <h1 class="title">Входящие</h1>
+            <button class="icon-btn" data-search aria-label="Поиск">${ICONS.search}</button>
+        </div>
         <p class="subtitle">Задачи без дня. Разложи их по дням.</p>
         ${tasks.length ? tasks.map(task => row(task, {
             side: `<button class="chip-btn side" data-action="today">Сегодня</button>`

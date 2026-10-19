@@ -77,3 +77,12 @@ export function relativeDay(value, now = new Date()) {
     }
     return parseDate(value).toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "short" });
 }
+
+// сдвиг дня или момента на N дней с сохранением формата
+export function shiftDays(value, days) {
+    if (!value) {
+        return value;
+    }
+    const date = addDays(parseDate(value), days);
+    return hasTime(value) ? toIso(date) : dayKey(date);
+}

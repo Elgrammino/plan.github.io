@@ -1,7 +1,9 @@
 // Разбор быстрой фразы: «завтра в 19 рилс 1ч #инста !» →
 // { title: "Рилс", plannedAt, durationMin: 60, list: "insta", priority: "high" }.
+// Повторы: «каждый понедельник в 10», «1-го числа каждого месяца», «каждые 3 дня» → repeat.
 // Распознанные куски вырезаются из названия. Всё, что не распознано, остаётся текстом.
 import { addDays, atTime, dayKey, toIso } from "./dates.js";
+import { firstDate, nextDate } from "./repeat.js";
 
 // границы слова: \b в JavaScript не работает с кириллицей
 const B = "(?:^|\\s)";
@@ -79,6 +81,60 @@ function findDay(state, now) {
     return day;
 }
 
+// формы дней недели для повторов: «каждый понедельник», «по средам», «по пн и чт»
+const REPEAT_DAYS = {
+    mo: ["понедельникам", "понедельник", "пн"],
+    tu: ["вторникам", "вторник", "вт"],
+    we: ["средам", "среду", "среда", "ср"],
+    th: ["четвергам", "четверг", "чт"],
+    fr: ["пятницам", "пятницу", "пятница", "пт"],
+    sa: ["субботам", "субботу", "суббота", "сб"],
+    su: ["воскресеньям", "воскресенье", "вс"]
+};
+const DAY_FORM = Object.values(REPEAT_DAYS).flat().sort((a, b) => b.length - a.length).join("|");
+const NUMBERS = { "два": 2, "две": 2, "три": 3, "четыре": 4, "пять": 5, "шесть": 6 };
+const N = "(\\d+|" + Object.keys(NUMBERS).join("|") + ")";
+const num = word => NUMBERS[word.toLowerCase()] || +word;
+
+function findRepeat(state) {
+    let repeat = null;
+    // дни недели: «каждый понедельник и четверг», «по вторникам, пятницам»
+    const addWeekdays = text => {
+        const found = Object.entries(REPEAT_DAYS)
+            .filter(([, forms]) => forms.some(form => new RegExp("(?:^|[\\s,])" + form + "(?=$|[\\s,])", "i").test(text)))
+            .map(([code]) => code);
+        return found.length ? found : null;
+    };
+    const DAYS_LIST = "((?:" + DAY_FORM + ")(?:\\s*(?:,|и)\\s*(?:" + DAY_FORM + "))*)";
+
+    cut(state, new RegExp(B + "(?:каждый\\s+день|ежедневно)" + E, "i"), () => repeat = { unit: "day" })
+        || cut(state, new RegExp(B + "каждые\\s+" + N + "\\s+(?:дня|дней|день)" + E, "i"), m => repeat = { unit: "day", every: num(m[1]) })
+        || cut(state, new RegExp(B + "(?:каждые|раз\\s+в)\\s+" + N + "\\s+(?:недели|недель|неделю)" + E, "i"), m => repeat = { unit: "week", every: num(m[1]) })
+        || cut(state, new RegExp(B + "(?:каждую\\s+неделю|еженедельно|раз\\s+в\\s+неделю)" + E, "i"), () => repeat = { unit: "week" })
+        || cut(state, new RegExp(B + "по\\s+будням" + E, "i"), () => repeat = { unit: "week", weekdays: ["mo", "tu", "we", "th", "fr"] })
+        || cut(state, new RegExp(B + "по\\s+выходным" + E, "i"), () => repeat = { unit: "week", weekdays: ["sa", "su"] })
+        || cut(state, new RegExp(B + "(\\d{1,2})-?(?:го|е)?\\s+(?:числа\\s+)?каждого\\s+месяца" + E, "i"), m => {
+            if (+m[1] < 1 || +m[1] > 31) {
+                return false;
+            }
+            repeat = { unit: "month", monthDay: +m[1] };
+        })
+        || cut(state, new RegExp(B + "каждое\\s+(\\d{1,2})-?(?:е)?\\s+число" + E, "i"), m => repeat = { unit: "month", monthDay: Math.min(31, Math.max(1, +m[1])) })
+        || cut(state, new RegExp(B + "(?:каждые|раз\\s+в)\\s+" + N + "\\s+(?:месяца|месяцев)" + E, "i"), m => repeat = { unit: "month", every: num(m[1]) })
+        || cut(state, new RegExp(B + "(?:каждый\\s+месяц|ежемесячно|раз\\s+в\\s+месяц)" + E, "i"), () => repeat = { unit: "month" });
+
+    // «каждый понедельник», «по средам» — сами по себе или после «раз в две недели»
+    if (!repeat || (repeat.unit === "week" && !repeat.weekdays)) {
+        cut(state, new RegExp(B + "(?:каждый|каждую|каждое|по)\\s+" + DAYS_LIST + E, "i"), m => {
+            repeat = { unit: "week", ...repeat, weekdays: addWeekdays(m[1]) };
+        });
+    }
+    if (repeat && repeat.every === 1) {
+        delete repeat.every;
+    }
+    return repeat;
+}
+
 function findTime(state) {
     let time = null;
     // «в 19», «в 19:30», «в 9.30», «в 7 вечера», «к 18»
@@ -135,9 +191,18 @@ export function parseQuick(input, { lists = [], now = new Date() } = {}) {
         result.priority = "high";
     }
     result.list = findList(state, lists);
+    result.repeat = findRepeat(state);
     result.durationMin = findDuration(state);
     const time = findTime(state);
     let day = findDay(state, now);
+
+    if (result.repeat && !day) {
+        // повтор без даты: первый подходящий день; если время сегодня уже прошло — следующий
+        day = firstDate(result.repeat, now);
+        if (time && dayKey(day) === dayKey(now) && atTime(now, ...time) <= now) {
+            day = nextDate(result.repeat, day);
+        }
+    }
 
     if (time) {
         if (!day) {

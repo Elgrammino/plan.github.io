@@ -82,6 +82,7 @@ export const ICONS = {
     prev: `<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>`,
     next: `<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>`,
     plus: `<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`,
+    search: `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>`,
     close: `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
     trash: `<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>`
 };
