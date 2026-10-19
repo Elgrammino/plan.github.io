@@ -8,6 +8,9 @@ export const state = {
     lists: [],
     settings: defaultSettings(),
     templates: [],      // шаблоны чек-листов: [{ id, name, steps: ["…"] }]
+    chains: [],         // шаблоны цепочек: [{ id, name, lines: ["-2д 12:00 Снять: {title} 1ч"] }] — см. js/chains.js
+    goals: [],          // цели недели: [{ id, title, week: "2026-10-19" (понедельник), done }]
+    rituals: {},        // { morning: "2026-10-19", evening: "2026-10-19" } — когда ритуал пройден
     dump: null,         // черновик выгрузки из головы: переживает закрытие приложения
     lastDumpDay: null   // день последней законченной выгрузки
 };
@@ -31,6 +34,12 @@ const DEFAULT_TEMPLATES = [
     { id: "tpl-kids", name: "Сборы: детский праздник", steps: ["Реквизит для детского номера", "Костюм", "Колонка заряжена", "Призы и подарки", "Адрес и имя именинника", "Контакт родителей"] }
 ];
 
+// {title} — название главной задачи; «дорога» — время в пути из карточки выступления
+const DEFAULT_CHAINS = [
+    { id: "chain-post", name: "Публикация", lines: ["-2д 12:00 Снять: {title} 1ч", "-1д 15:00 Смонтировать: {title} 2ч", "-3ч Подпись: {title} 15м"] },
+    { id: "chain-show", name: "Выступление", lines: ["-3ч Сборы: {title} 30м", "-дорога Выезд: {title} дорога", "+2ч После: {title} 30м"] }
+];
+
 const listeners = new Set();
 
 // возвращает функцию отписки
@@ -44,10 +53,14 @@ function changed() {
 }
 
 export async function loadStore() {
-    const [tasks, lists, settings, dump, lastDumpDay, templates] = await Promise.all([
-        getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay"), getMeta("templates")
+    const [tasks, lists, settings, dump, lastDumpDay, templates, chains, goals, rituals] = await Promise.all([
+        getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay"), getMeta("templates"),
+        getMeta("chains"), getMeta("goals"), getMeta("rituals")
     ]);
     state.templates = templates || DEFAULT_TEMPLATES;
+    state.chains = chains || DEFAULT_CHAINS;
+    state.goals = goals || [];
+    state.rituals = rituals || {};
     // корзина хранит задачи 30 дней
     const purgeBefore = toIso(addDays(new Date(), -30));
     tasks.forEach(task => {
@@ -61,6 +74,22 @@ export async function loadStore() {
     Object.assign(state.settings, settings); // поверх значений по умолчанию: новые ключи не теряются
     state.dump = dump || null;
     state.lastDumpDay = lastDumpDay || null;
+}
+
+export function saveChains() {
+    changed();
+    return setMeta("chains", state.chains);
+}
+
+export function saveGoals() {
+    changed();
+    return setMeta("goals", state.goals);
+}
+
+export function markRitual(name) {
+    state.rituals[name] = dayKey(new Date());
+    changed();
+    return setMeta("rituals", state.rituals);
 }
 
 export function saveTemplates() {
@@ -110,6 +139,9 @@ export function newTask(fields = {}) {
         repeat: null,      // { unit: "day"|"week"|"month", every, weekdays, monthDay } — см. docs/claude-format.md
         show: null,        // выступление: { client, phone, address, fee, format, travelMin }
         nextId: null,      // у выполненной повторяющейся: id следующего раза
+        goal: null,        // id цели недели
+        chainOf: null,     // задача цепочки: id главной задачи
+        anchorAt: null,    // plannedAt главной задачи, от которого посчитана цепочка
         importedAt: null,  // когда задача последний раз пришла из файла
         imported: null,    // поля, какими они пришли из файла: по ним видно, что ты менял сам
         done: false,
@@ -124,8 +156,28 @@ export function newTask(fields = {}) {
 export async function saveTask(task) {
     task.updatedAt = toIso(new Date());
     state.tasks.set(task.id, task);
+    const moved = followChain(task);
     changed();
-    await put("tasks", task);
+    await Promise.all([put("tasks", task), ...moved.map(child => put("tasks", child))]);
+}
+
+// главную задачу перенесли — несделанные задачи её цепочки едут следом на тот же сдвиг
+function followChain(anchor) {
+    if (!hasTime(anchor.plannedAt)) {
+        return [];
+    }
+    const now = toIso(new Date());
+    return [...state.tasks.values()].filter(child => child.chainOf === anchor.id && !child.done && !child.deletedAt
+        && hasTime(child.anchorAt) && child.anchorAt !== anchor.plannedAt)
+        .map(child => {
+            const shift = parseDate(anchor.plannedAt) - parseDate(child.anchorAt);
+            if (hasTime(child.plannedAt)) {
+                child.plannedAt = toIso(new Date(parseDate(child.plannedAt).getTime() + shift));
+            }
+            child.anchorAt = anchor.plannedAt;
+            child.updatedAt = now;
+            return child;
+        });
 }
 
 // у повторяющейся задачи выполнение создаёт следующий раз, а «Вернуть» его убирает
@@ -150,7 +202,7 @@ function nextInstance(task, now = new Date()) {
     const planned = task.plannedAt ? parseDate(task.plannedAt) : null;
     const day = nextAfterDone(task.repeat, planned, now);
     const shift = daysBetween(planned || now, day);
-    const { id, createdAt, updatedAt, done, doneAt, nextId, importedAt, imported, deletedAt, ...fields } = task;
+    const { id, createdAt, updatedAt, done, doneAt, nextId, importedAt, imported, deletedAt, chainOf, anchorAt, goal, ...fields } = task;
     return newTask({
         ...fields,
         plannedAt: !planned ? dayKey(day) : shiftDays(task.plannedAt, shift),
@@ -231,9 +283,15 @@ export function dayTasks(key) {
     return { timed, anytime };
 }
 
-export function inboxTasks() {
-    return alive().filter(task => !task.plannedAt && !task.done)
+// задача с «не раньше» в будущем во Входящих не мозолит глаза: она в «Начать позже»
+export function inboxTasks(now = new Date()) {
+    return alive().filter(task => !task.plannedAt && !task.done && !(task.start && task.start > dayKey(now)))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function laterTasks(now = new Date()) {
+    return alive().filter(task => !task.plannedAt && !task.done && task.start && task.start > dayKey(now))
+        .sort((a, b) => a.start.localeCompare(b.start));
 }
 
 // задача «сейчас»: идёт по времени; если ничего не идёт — ближайшая следующая

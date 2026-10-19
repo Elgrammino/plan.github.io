@@ -1,12 +1,13 @@
 // Настройки во вкладке «Ещё»: день и ритуалы, перенос, списки, шаблоны чек-листов, корзина.
 // И журнал сделанного по дням.
 import { addDays, dayKey, durationText, parseDate, relativeDay, timeText } from "./dates.js";
+import { parseLine } from "./chains.js";
 import { openOnboarding, resetHints } from "./onboarding.js";
 import { repeatText } from "./repeat.js";
 import { editTask } from "./sheets.js";
 import {
     POSTPONE, doneByDay, listName, onChange, postponed, purgeTasks, putTasks, restoreTask, saveSettings,
-    saveTemplates, setLists, state, trashedTasks
+    saveChains, saveTemplates, setLists, state, trashedTasks
 } from "./store.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
@@ -31,6 +32,7 @@ export function settingsRows() {
             ${row("postpone", "Варианты переноса", `<span class="mono">${state.settings.postpone.length}</span>`)}
             ${row("lists", "Списки", `<span class="mono">${state.lists.length}</span>`)}
             ${row("templates", "Шаблоны чек-листов", `<span class="mono">${state.templates.length}</span>`)}
+            ${row("chains", "Шаблоны цепочек", `<span class="mono">${state.chains.length}</span>`)}
             ${row("trash", "Корзина", trash ? `<span class="mono">${trash}</span>` : "пусто")}
             ${row("onboarding", "Знакомство с&nbsp;приложением", "заново")}
         </div>`;
@@ -42,7 +44,7 @@ export function openSettings(key) {
         openOnboarding(null, "intro-0");
         return;
     }
-    ({ journal: journalSheet, day: daySheet, postpone: postponeSheet, lists: listsSheet, templates: templatesSheet, trash: trashSheet })[key]?.();
+    ({ journal: journalSheet, day: daySheet, postpone: postponeSheet, lists: listsSheet, templates: templatesSheet, chains: chainsSheet, trash: trashSheet })[key]?.();
 }
 
 // ---- день и ритуалы ----
@@ -303,6 +305,98 @@ export function editTemplate(template, onDone = () => { }, prefill = null) {
         showToast(`Шаблон «${template.name}» удалён`, "Вернуть", () => {
             state.templates.splice(index, 0, template);
             saveTemplates();
+            onDone();
+        });
+    });
+}
+
+// ---- шаблоны цепочек ----
+function chainsSheet() {
+    const { sheet, close } = openSheet(`
+        <div class="sheet-body">
+            <h2>Шаблоны цепочек</h2>
+            <p class="hint">От&nbsp;главной задачи (публикация, выступление) сами считаются шаги. Подключаются в&nbsp;карточке задачи, блок «Цепочка».</p>
+            <div id="chains"></div>
+            <button class="btn ghost wide" id="newChain" style="margin-top: var(--sp-16)">Новый шаблон</button>
+        </div>
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
+    const render = () => {
+        sheet.querySelector("#chains").innerHTML = state.chains.map(chain => `
+            <button class="batch-row" data-chain="${chain.id}">
+                <span class="what">${esc(chain.name)}</span>
+                <span class="mono text-2">${chain.lines.length}</span>
+            </button>`).join("") || `<p class="text-2">Шаблонов пока нет.</p>`;
+    };
+    sheet.querySelector("#chains").addEventListener("click", event => {
+        const id = event.target.closest("[data-chain]")?.dataset.chain;
+        if (id) {
+            editChain(state.chains.find(chain => chain.id === id), render);
+        }
+    });
+    sheet.querySelector("#newChain").addEventListener("click", () => editChain(null, render));
+    sheet.querySelector("[data-close]").addEventListener("click", close);
+    render();
+}
+
+function editChain(chain, onDone) {
+    const { sheet, close } = openSheet(`
+        <div class="sheet-body">
+            <input class="input" id="chainName" placeholder="Название, например «Публикация»" value="${esc(chain?.name || "")}" autocomplete="off">
+            <div class="field"><div class="label">Шаги, по&nbsp;одному в&nbsp;строке</div>
+                <textarea class="textarea mono-area" id="chainLines" rows="6" placeholder="-2д 12:00 Снять: {title} 1ч">${esc(chain?.lines.join("\n") || "")}</textarea>
+                <div class="preview" id="chainCheck"></div>
+            </div>
+            <div class="hint chain-help">
+                Строка: <b>сдвиг</b> [время] <b>название</b> [длительность].<br>
+                <code>-2д 12:00 Снять: {title} 1ч</code> — за&nbsp;два дня в&nbsp;12:00<br>
+                <code>-3ч Подпись: {title} 15м</code> — за&nbsp;три часа до&nbsp;начала<br>
+                <code>-дорога Выезд: {title} дорога</code> — за&nbsp;время в&nbsp;пути<br>
+                <code>+2ч После: {title} 30м</code> — через два часа после начала<br>
+                {title} — название главной задачи. Шаг «Сборы…» получает чек-лист.
+            </div>
+        </div>
+        <div class="sheet-foot">
+            ${chain ? `<button class="icon-btn" id="chainDelete" aria-label="Удалить">${ICONS.trash}</button>` : ""}
+            <button class="btn ghost grow" data-close>Отмена</button>
+            <button class="btn primary grow" id="chainSave">Сохранить</button>
+        </div>`);
+    const $ = selector => sheet.querySelector(selector);
+    const lines = () => $("#chainLines").value.split("\n").map(line => line.trim()).filter(Boolean);
+    // какие строки не разобрались — видно сразу
+    const check = () => {
+        const bad = lines().filter(line => !parseLine(line));
+        $("#chainCheck").textContent = bad.length ? `Не понял: ${bad.join("; ")}` : lines().length ? `Шагов: ${lines().length}` : "";
+    };
+    $("#chainLines").addEventListener("input", check);
+    check();
+    sheet.querySelector("[data-close]").addEventListener("click", close);
+    $("#chainSave").addEventListener("click", () => {
+        const name = $("#chainName").value.trim();
+        const good = lines().filter(line => parseLine(line));
+        if (!name || !good.length) {
+            showToast(name ? "Нужен хотя бы один понятный шаг" : "Дай шаблону название");
+            return;
+        }
+        haptic();
+        if (chain) {
+            Object.assign(chain, { name, lines: good });
+        } else {
+            state.chains.push({ id: "chain-" + crypto.randomUUID().slice(0, 6), name, lines: good });
+        }
+        saveChains();
+        close();
+        onDone();
+    });
+    $("#chainDelete")?.addEventListener("click", () => {
+        haptic();
+        const index = state.chains.indexOf(chain);
+        state.chains.splice(index, 1);
+        saveChains();
+        close();
+        onDone();
+        showToast(`Шаблон «${chain.name}» удалён`, "Вернуть", () => {
+            state.chains.splice(index, 0, chain);
+            saveChains();
             onDone();
         });
     });

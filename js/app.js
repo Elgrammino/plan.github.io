@@ -6,6 +6,7 @@ import { journalSheet } from "./settings.js";
 import { onNotifyClick, pasteFromClipboard, resumeAfterShortcut } from "./notify.js";
 import { loadReminders, shortcutJustRan } from "./reminders.js";
 import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboarding.js";
+import { onRitualClick } from "./rituals.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -93,7 +94,7 @@ document.querySelector(".app").addEventListener("click", event => {
         render();
         return;
     }
-    if (onNotifyClick(event)) {
+    if (onNotifyClick(event) || onRitualClick(event)) {
         return;
     }
     const hint = event.target.closest("[data-hint]");

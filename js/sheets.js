@@ -4,6 +4,9 @@ import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
 import { newTask, postponeOptions, postponed, restoreTask, saveTask, state, trashTask } from "./store.js";
 import { editTemplate } from "./settings.js";
+import { applyChain, chainTasks, planChain } from "./chains.js";
+import { readShowFields, showFieldsHtml } from "./show.js";
+import { weekGoals } from "./goals.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -128,6 +131,8 @@ export function editTask(task, draft = null) {
     const { sheet, close } = openSheet(`
         <div class="sheet-body">
             <textarea class="textarea title-input" id="title" rows="1" placeholder="Что сделать">${esc(task.title)}</textarea>
+            ${chips("kind", [["task", "Задача"], ["post", "Публикация"], ["show", "Выступление"]], task.kind || "task")}
+            <div id="showBox"></div>
 
             <div class="field"><div class="label">Когда</div>
                 ${chips("when", [["inbox", "Входящие"], ["today", "Сегодня"], ["tomorrow", "Завтра"]], when)}
@@ -164,6 +169,12 @@ export function editTask(task, draft = null) {
                 ${chips("list", lists, task.list || "")}
             </div>
 
+            ${weekGoals().length ? `<div class="field"><div class="label">Цель недели</div>
+                ${chips("goal", weekGoals().map(goal => [goal.id, esc(goal.title)]), task.goal)}
+            </div>` : ""}
+
+            ${draft ? "" : `<div class="field"><div class="label">Цепочка</div><div id="chain"></div></div>`}
+
             <div class="field"><div class="label">Сроки</div>
                 <div class="row"><span class="text-2" style="width: 96px">Дедлайн</span>
                     <input class="input" type="date" id="due" value="${dayOf(task.due) || ""}"></div>
@@ -199,7 +210,7 @@ export function editTask(task, draft = null) {
     const $ = selector => sheet.querySelector(selector);
     autoGrow($("#title"));
     autoGrow($("#notes"));
-    sheet.querySelectorAll('input[name="duration"], input[name="energy"]').forEach(input => input.dataset.optional = "");
+    sheet.querySelectorAll('input[name="duration"], input[name="energy"], input[name="goal"]').forEach(input => input.dataset.optional = "");
     allowUncheck(sheet);
     if (!task.title) {
         $("#title").focus();
@@ -321,6 +332,71 @@ export function editTask(task, draft = null) {
         }
     });
 
+    // ---- выступление: поля видны, когда выбран этот тип ----
+    const syncKind = () => {
+        const isShow = sheet.querySelector('input[name="kind"]:checked')?.value === "show";
+        const box = $("#showBox");
+        if (isShow && !box.innerHTML) {
+            box.innerHTML = showFieldsHtml(task);
+        } else if (!isShow) {
+            box.innerHTML = "";
+        }
+    };
+    sheet.querySelectorAll('input[name="kind"]').forEach(input => input.addEventListener("change", syncKind));
+    syncKind();
+
+    // ---- цепочка: шаги от этой задачи, едут следом при переносе ----
+    const renderChain = (picked = null) => {
+        const box = $("#chain");
+        if (!box) {
+            return;
+        }
+        const children = chainTasks(task);
+        if (children.length) {
+            box.innerHTML = children.map(child => `
+                <div class="chain-step ${child.done ? "done" : ""}">
+                    <span class="mono">${child.plannedAt ? esc(relativeDay(child.plannedAt)) + " " + (hasTime(child.plannedAt) ? timeText(child.plannedAt) : "") : "—"}</span>
+                    ${esc(child.title)}
+                </div>`).join("") + `<p class="hint">Перенесёшь эту задачу — шаги поедут следом.</p>`;
+            return;
+        }
+        if (!hasTime(read().plannedAt)) {
+            box.innerHTML = `<p class="hint">Поставь день и время — и от них посчитаются шаги: снять, смонтировать, выезд…</p>`;
+            return;
+        }
+        if (picked) {
+            // шаги цепочки до создания + выбор чек-листа для сборов
+            const preview = planChain(picked, { ...task, ...read(), show: readShowFields(sheet) || task.show });
+            const needsKit = preview.some(step => /^сборы/i.test(step.title));
+            box.innerHTML = preview.map(step => `
+                <div class="chain-step"><span class="mono">${esc(relativeDay(toIso(step.at)))} ${timeText(toIso(step.at))}</span>${esc(step.title)}</div>`).join("") + `
+                ${needsKit ? `<div class="label">Чек-лист для сборов</div>
+                    ${chips("kit", [["", "Без чек-листа"], ...state.templates.map(template => [template.id, esc(template.name)])], state.templates.find(t => /^сборы/i.test(t.name))?.id || "")}` : ""}
+                <div class="btns" style="margin-top: var(--sp-12)">
+                    <button class="btn ghost" id="chainCancel">Отмена</button>
+                    <button class="btn primary" id="chainApply">Создать ${preview.length}</button>
+                </div>`;
+            $("#chainCancel").addEventListener("click", () => renderChain());
+            $("#chainApply").addEventListener("click", async () => {
+                haptic();
+                save(); // цепочка считается от сохранённой задачи
+                if (!state.tasks.has(task.id)) {
+                    showToast("Сначала дай задаче название");
+                    return;
+                }
+                const kit = state.templates.find(template => template.id === sheet.querySelector('input[name="kit"]:checked')?.value);
+                await applyChain(picked, task, kit?.steps || []);
+                renderChain();
+            });
+            return;
+        }
+        box.innerHTML = `<div class="chips">${state.chains.map(chain => `<button class="chip-btn" data-chain="${chain.id}">+ ${esc(chain.name)}</button>`).join("")}</div>`;
+        box.querySelectorAll("[data-chain]").forEach(button => button.addEventListener("click", () =>
+            renderChain(state.chains.find(chain => chain.id === button.dataset.chain))));
+    };
+    ["#day", "#time"].forEach(selector => $(selector).addEventListener("change", () => renderChain()));
+    renderChain();
+
     function read() {
         const repeat = readRepeat();
         // повтор без даты: первый подходящий день
@@ -335,7 +411,11 @@ export function editTask(task, draft = null) {
             repeat,
             energy: checked("energy"),
             list: checked("list") || null,
-            due: $("#due").value || null,
+            // дедлайн со временем (из файла Claude) не теряет время, если день не меняли
+            due: $("#due").value ? ($("#due").value === dayOf(task.due) ? task.due : $("#due").value) : null,
+            kind: checked("kind") || "task",
+            show: checked("kind") === "show" ? readShowFields(sheet) : task.show,
+            goal: checked("goal"),
             start: $("#start").value || null,
             priority: $("#priority").checked ? "high" : "normal",
             persistent: $("#persistent").checked,

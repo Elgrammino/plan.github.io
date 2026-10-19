@@ -1,7 +1,9 @@
 // Экраны «Сегодня» и «Входящие».
 import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
-import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, listName, overdueTasks, state } from "./store.js";
+import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listName, overdueTasks, state } from "./store.js";
 import { todayButton } from "./notify.js";
+import { departure, showDayBlock } from "./show.js";
+import { morningEntry, eveningEntry, goalsChip } from "./rituals.js";
 import { repeatText } from "./repeat.js";
 import { ICONS, esc } from "./ui.js";
 
@@ -9,6 +11,10 @@ const ENERGY_DOTS = { low: "●", mid: "●●", high: "●●●" };
 
 function sub(task, { showDay = false } = {}) {
     const parts = [];
+    const leave = task.kind === "show" && departure(task);
+    if (leave) {
+        parts.push("выезд " + timeText(toIso(leave)));
+    }
     if (showDay && task.plannedAt) {
         parts.push(esc(relativeDay(task.plannedAt)));
     }
@@ -63,21 +69,13 @@ function weekdayLine(date, isToday) {
     return prefix + (prefix ? weekday : weekday.charAt(0).toUpperCase() + weekday.slice(1));
 }
 
-// вход в выгрузку: продолжить черновик, вечером позвать, иначе тихая кнопка
-function dumpEntry(now) {
+// вход в выгрузку: продолжить черновик или тихая кнопка (вечером зовёт «Закрыть день», там тоже есть выгрузка)
+function dumpEntry() {
     const dump = state.dump;
     if (dump) {
         const n = dump.phase === "write" ? dump.thoughts.length : dump.cards.length;
         const what = dump.phase === "write" ? "Продолжить выгрузку" : "Разобрать выгрузку";
         return `<button class="chip-btn today-tool" data-dump>${what}${n ? ` · <span class="mono">${n}</span>` : ""}</button>`;
-    }
-    const [hours, minutes] = state.settings.evening.split(":").map(Number);
-    if (now.getHours() * 60 + now.getMinutes() >= hours * 60 + minutes && state.lastDumpDay !== dayKey(now)) {
-        return `
-            <div class="card notice evening">
-                <div>Вечер. ${state.settings.dumpMin}&nbsp;минут, чтобы выгрузить из&nbsp;головы всё, что крутится, и&nbsp;спать спокойно.</div>
-                <button class="btn primary" data-dump>Выгрузить</button>
-            </div>`;
     }
     return `<button class="chip-btn today-tool" data-dump>Выгрузка из&nbsp;головы</button>`;
 }
@@ -114,7 +112,8 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
-        html += todayButton() + dumpEntry(now);
+        html += `<div class="today-tools">${todayButton()}${dumpEntry()}${goalsChip()}</div>`
+            + morningEntry(now) + eveningEntry(now) + showDayBlock(now);
         const current = currentTask(now);
         if (current) {
             const { task, running } = current;
@@ -188,6 +187,7 @@ export function renderToday(el, viewDay) {
 // ---- «Входящие» ----
 export function renderInbox(el) {
     const tasks = inboxTasks();
+    const later = laterTasks();
     el.innerHTML = `
         <div class="day-head">
             <h1 class="title">Входящие</h1>
@@ -200,6 +200,9 @@ export function renderInbox(el) {
             <div class="empty">
                 <svg class="mark" viewBox="0 0 64 64"><path d="M10 36l8-20h28l8 20v14H10z"/><path d="M10 36h13l3 5h12l3-5h13"/></svg>
                 <p>Пусто. Всё разложено по дням.</p>
-            </div>`}`;
+            </div>`}
+        ${later.length ? `<div class="label">Начать позже</div>` + later.map(task => row(task, {
+            side: `<span class="chip-btn side later mono">с ${esc(relativeDay(task.start))}</span>`
+        })).join("") : ""}`;
 }
 

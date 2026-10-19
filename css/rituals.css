@@ -1,0 +1,219 @@
+/* Этап 9: ритуалы, цели недели, цепочки, выступления. */
+
+/* ---- «Сегодня»: ряд кнопок и приглашения ---- */
+.today-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    margin-top: var(--sp-8);
+}
+
+.today-tools .today-tool {
+    margin-top: 0;
+}
+
+.today-tools:empty {
+    display: none;
+}
+
+.ritual-call {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-16);
+    margin-top: var(--sp-16);
+}
+
+.ritual-call .btn {
+    flex: none;
+}
+
+/* ---- день выступления ---- */
+.show-day {
+    margin-top: var(--sp-16);
+    padding: var(--sp-16);
+    border-radius: var(--r-16);
+    border: 1.5px solid var(--accent-line);
+    background: var(--accent-soft);
+}
+
+.show-title {
+    display: block;
+    text-align: left;
+    font: 600 var(--fs-20)/1.25 var(--font-head);
+    margin: var(--sp-4) 0;
+    overflow-wrap: anywhere;
+}
+
+.moments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-4) var(--sp-16);
+    margin: var(--sp-12) 0;
+}
+
+.moments > div {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.moments .mono {
+    font-size: var(--fs-20);
+    color: var(--text);
+}
+
+.moments .main .mono {
+    color: var(--accent);
+}
+
+.moments .past {
+    opacity: .5;
+}
+
+.moments .done .mono {
+    text-decoration: line-through;
+}
+
+.show-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    margin-top: var(--sp-12);
+}
+
+.show-actions:empty {
+    display: none;
+}
+
+.show-actions .btn {
+    flex: 1;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.show-actions svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---- ритуалы: строки с кнопками ---- */
+.ritual-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-12);
+    padding: var(--sp-12) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.ritual-row .what {
+    flex: 1 1 160px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ritual-row .sub {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.ritual-btns {
+    display: flex;
+    gap: var(--sp-4);
+}
+
+.ritual .load {
+    margin-top: var(--sp-8);
+}
+
+/* ---- цели недели ---- */
+.goal-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-12);
+    padding: var(--sp-8) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.goal-row .what {
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-row .bar {
+    margin: var(--sp-4) 0;
+}
+
+.goal-row .bar i {
+    background: var(--accent);
+}
+
+.goal-row .sub {
+    font-size: var(--fs-12);
+    color: var(--text-2);
+}
+
+.goal-row.done .name,
+.goal-line.done {
+    color: var(--text-3);
+    text-decoration: line-through;
+}
+
+.goal-check input {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--accent);
+}
+
+.goal-line {
+    padding: var(--sp-4) 0;
+}
+
+/* ---- цепочка в карточке задачи ---- */
+.chain-step {
+    display: flex;
+    gap: var(--sp-12);
+    padding: var(--sp-8) 0;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.chain-step .mono {
+    flex: none;
+    width: 112px;
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.chain-step.done {
+    color: var(--text-3);
+    text-decoration: line-through;
+}
+
+.mono-area {
+    font: var(--fs-14)/1.5 var(--font-mono);
+}
+
+.chain-help {
+    line-height: 1.7;
+}
+
+.chain-help code {
+    font: var(--fs-12) var(--font-mono);
+    color: var(--accent);
+}
+
+/* ---- «Входящие»: начать позже ---- */
+.chip-btn.later {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    color: var(--text-3);
+    font-weight: 400;
+}
