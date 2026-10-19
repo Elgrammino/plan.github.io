@@ -250,3 +250,164 @@
     font-size: 10px;
     color: var(--text-3);
 }
+
+/* ---- календарь: неделя ---- */
+.week-day {
+    padding: var(--sp-12) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.week-day.past {
+    opacity: .55;
+}
+
+.week-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+    min-height: 32px;
+}
+
+.week-name {
+    font: 600 var(--fs-16)/1.2 var(--font-head);
+}
+
+.week-day.today .week-name {
+    color: var(--accent);
+}
+
+.week-day .bar {
+    margin: var(--sp-4) 0 var(--sp-8);
+}
+
+.week-task {
+    display: flex;
+    gap: var(--sp-12);
+    width: 100%;
+    text-align: left;
+    padding: 3px 0;
+    font-size: var(--fs-14);
+    overflow-wrap: anywhere;
+}
+
+.week-task .mono {
+    flex: none;
+    width: 44px;
+    color: var(--text-2);
+}
+
+.week-task.virtual,
+.week-task.done {
+    color: var(--text-3);
+}
+
+.week-task.done {
+    text-decoration: line-through;
+}
+
+.week-task.show .mono {
+    color: var(--accent);
+}
+
+.week-empty {
+    margin: 0;
+    color: var(--text-3);
+}
+
+/* ---- календарь: день ---- */
+.day-grid {
+    position: relative;
+    margin-top: var(--sp-16);
+}
+
+.day-grid .hour {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--line);
+}
+
+.day-grid .hour span {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    padding-right: var(--sp-4);
+    font-size: var(--fs-12);
+    color: var(--text-3);
+    background: var(--bg);
+}
+
+.grid-now {
+    position: absolute;
+    left: 44px;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 2;
+}
+
+.grid-now::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.block {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 3px var(--sp-8);
+    text-align: left;
+    border-radius: 8px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--text-2);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.block.show {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+}
+
+.block.virtual {
+    background: none;
+    border: 1px dashed var(--text-3);
+}
+
+.block.done {
+    opacity: .45;
+}
+
+.block-title {
+    font-size: var(--fs-14);
+    line-height: 1.25;
+    font-weight: 600;
+}
+
+.block-time {
+    font-size: 11px;
+    color: var(--text-2);
+}
+
+/* короткая задача: время в одну строку с названием */
+.block.short {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--sp-8);
+    padding-top: 2px;
+}
+
+.block.short .block-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}

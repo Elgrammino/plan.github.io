@@ -1,6 +1,6 @@
-// Месячная сетка — общая для «Календаря» и «Контента», и сама вкладка «Календарь»:
-// месяц с отметками, ниже — задачи выбранного дня, включая будущие разы повторов.
-import { addDays, dayKey, dayOf, hasTime, parseDate, timeText } from "./dates.js";
+// Месячная сетка — общая для «Календаря» и «Контента», и сама вкладка «Календарь» с видами
+// день (сетка часов), неделя (7 дней с загрузкой) и месяц; везде видны будущие разы повторов.
+import { addDays, dayKey, dayOf, durationText, hasTime, parseDate, timeText } from "./dates.js";
 import { nextDate, repeatText } from "./repeat.js";
 import { row } from "./screens.js";
 import { editTask } from "./sheets.js";
@@ -69,55 +69,212 @@ export function monthRange(month) {
     return [dayKey(addDays(first, -7)), dayKey(addDays(new Date(month.getFullYear(), month.getMonth() + 1, 0), 7))];
 }
 
-// ---- вкладка «Календарь» ----
+// ---- вкладка «Календарь»: день, неделя, месяц ----
+const MODES = [["day", "День"], ["week", "Неделя"], ["month", "Месяц"]];
+const HOUR_PX = 56;     // высота часа в дневной сетке
+const DAY_START = 7;    // сетка дня с 7:00, раньше — если есть задачи раньше
+
+let mode = "week";
 let month = new Date();
 let selected = dayKey(new Date());
 
-export function renderCalendar(el) {
-    const [from, to] = monthRange(month);
-    const items = occurrences(from, to);
+const timeOf = item => hasTime(item.task.plannedAt) ? timeText(item.task.plannedAt) : "99";
+const byTime = (a, b) => timeOf(a).localeCompare(timeOf(b));
+
+function groupByDay(items) {
     const byDay = new Map();
     items.forEach(item => byDay.has(item.day) ? byDay.get(item.day).push(item) : byDay.set(item.day, [item]));
+    byDay.forEach(list => list.sort(byTime));
+    return byDay;
+}
+
+// будущий раз повтора: строка без отметки, по нажатию открывается сама повторяющаяся задача
+function virtualRow(task) {
+    return `
+        <div class="item virtual" data-id="${task.id}">
+            <span class="time mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : ""}</span>
+            <span class="check" aria-hidden="true"></span>
+            <button class="body" data-action="edit">
+                <div class="name">${esc(task.title)}</div>
+                <div class="sub">↻ ${esc(repeatText(task.repeat))} · появится, когда отметишь предыдущий раз</div>
+            </button>
+        </div>`;
+}
+
+const dayRows = list => list.map(({ task, virtual }) => virtual ? virtualRow(task)
+    : row(task, { time: hasTime(task.plannedAt) ? timeText(task.plannedAt) : "" })).join("");
+
+function nav(title, step) {
+    return `
+        <div class="month-head">
+            <button class="icon-btn" data-step="-${step}" aria-label="Назад">${ICONS.prev}</button>
+            <span class="month-title">${esc(title)}</span>
+            <button class="icon-btn" data-step="${step}" aria-label="Вперёд">${ICONS.next}</button>
+        </div>`;
+}
+
+const capital = text => text.charAt(0).toUpperCase() + text.slice(1);
+const minutesPlanned = list => list.filter(item => !item.task.done).reduce((sum, item) => sum + (item.task.durationMin || 0), 0);
+const clock = date => `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+
+function loadLine(planned) {
+    const limit = state.settings.dayLimitMin;
+    return `
+        <div class="load"><span>${planned > limit ? "Больше лимита на " + durationText(planned - limit) : "Загрузка дня"}</span>
+            <span class="mono">${durationText(planned) || "0 ч"} из ${durationText(limit)}</span></div>
+        <div class="bar ${planned > limit ? "over" : ""}"><i style="width: ${Math.min(100, planned / limit * 100)}%"></i></div>`;
+}
+
+// ---- месяц ----
+function monthView() {
+    const [from, to] = monthRange(month);
+    const byDay = groupByDay(occurrences(from, to));
     const marks = new Map([...byDay].map(([key, list]) => [key, list.slice(0, 3).map(item =>
         `<i class="${item.virtual ? "virtual" : ""} ${item.task.kind === "show" ? "show" : ""} ${item.task.done ? "done" : ""}"></i>`).join("")]));
-
-    const day = (byDay.get(selected) || []).sort((a, b) => {
-        const time = item => hasTime(item.task.plannedAt) ? timeText(item.task.plannedAt) : "99";
-        return time(a).localeCompare(time(b));
-    });
     const date = parseDate(selected).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
+    return monthGrid(month, selected, marks) +
+        `<div class="label">${esc(date)}</div>` +
+        (dayRows(byDay.get(selected) || []) || `<p class="search-empty">На этот день ничего. «+» добавит задачу сюда.</p>`);
+}
 
+// ---- неделя: 7 строк-дней с загрузкой; на телефоне так читается лучше семи узких колонок ----
+function weekView() {
+    const monday = addDays(parseDate(selected), -((parseDate(selected).getDay() + 6) % 7));
+    const sunday = addDays(monday, 6);
+    const byDay = groupByDay(occurrences(dayKey(monday), dayKey(sunday)));
+    const limit = state.settings.dayLimitMin;
+    const today = dayKey(new Date());
+    const sameMonth = monday.getMonth() === sunday.getMonth();
+    const title = `${monday.getDate()}${sameMonth ? "" : " " + monday.toLocaleDateString("ru-RU", { month: "short" })} – ${sunday.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}`;
+    let html = nav(title, 7);
+    for (let i = 0; i < 7; i++) {
+        const day = addDays(monday, i);
+        const key = dayKey(day);
+        const list = byDay.get(key) || [];
+        const planned = minutesPlanned(list);
+        html += `
+            <div class="week-day ${key === today ? "today" : ""} ${key < today ? "past" : ""}">
+                <button class="week-head" data-open-day="${key}">
+                    <span class="week-name">${esc(capital(day.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric" })))}</span>
+                    <span class="mono text-2">${planned ? durationText(planned) : ""}</span>
+                </button>
+                ${planned ? `<div class="bar ${planned > limit ? "over" : ""}"><i style="width: ${Math.min(100, planned / limit * 100)}%"></i></div>` : ""}
+                ${list.map(({ task, virtual }) => `
+                    <button class="week-task ${virtual ? "virtual" : ""} ${task.done ? "done" : ""} ${task.kind === "show" ? "show" : ""}" data-id="${task.id}" data-action="edit">
+                        <span class="mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : "·"}</span>${esc(task.title)}${virtual ? " ↻" : ""}
+                    </button>`).join("") || `<p class="week-empty">—</p>`}
+            </div>`;
+    }
+    return html;
+}
+
+// ---- день: сетка часов, задачи блоками по времени и длительности ----
+function dayView() {
+    const date = parseDate(selected);
+    const list = groupByDay(occurrences(selected, selected)).get(selected) || [];
+    const timed = list.filter(item => hasTime(item.task.plannedAt));
+    const anytime = list.filter(item => !hasTime(item.task.plannedAt));
+    const startOf = item => parseDate(item.task.plannedAt).getHours() * 60 + parseDate(item.task.plannedAt).getMinutes();
+    const first = Math.min(DAY_START, ...timed.map(item => Math.floor(startOf(item) / 60)));
+    const top = value => (value - first * 60) / 60 * HOUR_PX;
+
+    // пересекающиеся задачи встают рядом: колонки раздаются жадно внутри группы пересечений
+    const blocks = timed.map(item => ({ item, start: startOf(item), end: startOf(item) + Math.max(20, item.task.durationMin || 30) }))
+        .sort((a, b) => a.start - b.start);
+    let group = [];
+    let groupEnd = -1;
+    const flush = () => {
+        const columns = Math.max(...group.map(block => block.col)) + 1;
+        group.forEach(block => block.cols = columns);
+        group = [];
+    };
+    blocks.forEach(block => {
+        if (group.length && block.start >= groupEnd) {
+            flush();
+        }
+        const used = new Set(group.filter(other => other.end > block.start).map(other => other.col));
+        block.col = 0;
+        while (used.has(block.col)) {
+            block.col++;
+        }
+        group.push(block);
+        groupEnd = Math.max(groupEnd, block.end);
+    });
+    if (group.length) {
+        flush();
+    }
+
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    let hours = "";
+    for (let h = first; h < 24; h++) {
+        hours += `<div class="hour" style="top: ${top(h * 60)}px"><span class="mono">${String(h).padStart(2, "0")}:00</span></div>`;
+    }
+
+    return nav(capital(date.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })), 1) +
+        loadLine(minutesPlanned(list)) +
+        (anytime.length ? `<div class="label">В течение дня</div>` + dayRows(anytime) : "") + `
+        <div class="day-grid" style="height: ${top(24 * 60)}px">
+            ${hours}
+            ${selected === dayKey(now) && nowMin >= first * 60 ? `<div class="grid-now" style="top: ${top(nowMin)}px"></div>` : ""}
+            ${blocks.map(({ item, start, end, col, cols }) => {
+                const begin = parseDate(item.task.plannedAt);
+                const finish = item.task.durationMin ? "–" + clock(new Date(begin.getTime() + item.task.durationMin * 60000)) : "";
+                return `
+                <button class="block ${end - start < 45 ? "short" : ""} ${item.virtual ? "virtual" : ""} ${item.task.done ? "done" : ""} ${item.task.kind === "show" ? "show" : ""}"
+                        data-id="${item.task.id}" data-action="edit"
+                        style="top: ${top(start)}px; height: ${Math.max(22, top(end) - top(start) - 2)}px; left: calc(52px + (100% - 52px) * ${col / cols}); width: calc((100% - 52px) / ${cols} - 3px)">
+                    <span class="block-title">${esc(item.task.title)}${item.virtual ? " ↻" : ""}</span>
+                    <span class="mono block-time">${clock(begin)}${finish}</span>
+                </button>`;
+            }).join("")}
+        </div>`;
+}
+
+export function renderCalendar(el) {
     el.innerHTML = `
         <h1 class="title">Календарь</h1>
-        ${monthGrid(month, selected, marks)}
-        <div class="label">${esc(date)}</div>
-        ${day.map(({ task, virtual }) => virtual ? `
-            <div class="item virtual" data-id="${task.id}">
-                <span class="time mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : ""}</span>
-                <span class="check" aria-hidden="true"></span>
-                <button class="body" data-action="edit">
-                    <div class="name">${esc(task.title)}</div>
-                    <div class="sub">↻ ${esc(repeatText(task.repeat))} · появится, когда отметишь предыдущий раз</div>
-                </button>
-            </div>` : row(task, { time: hasTime(task.plannedAt) ? timeText(task.plannedAt) : "" })).join("")
-        || `<p class="search-empty">На этот день ничего. «+» добавит задачу сюда.</p>`}`;
+        <div class="segmented">${MODES.map(([id, label]) => `<button data-mode="${id}" ${id === mode ? 'aria-current="true"' : ""}>${label}</button>`).join("")}</div>
+        ${mode === "day" ? dayView() : mode === "week" ? weekView() : monthView()}`;
+}
+
+// день сегодня открывается на текущем часе, а не на 7 утра
+function scrollToNow() {
+    const now = document.querySelector("#calendar .grid-now");
+    if (now) {
+        requestAnimationFrame(() => window.scrollTo({ top: Math.max(0, now.getBoundingClientRect().top + window.scrollY - 200) }));
+    }
 }
 
 export function onCalendarClick(event, rerender) {
+    const modeButton = event.target.closest("[data-mode]");
+    const step = event.target.closest("[data-step]");
     const shift = event.target.closest("[data-month]");
     const pick = event.target.closest("[data-pick]");
-    if (shift) {
+    const openDay = event.target.closest("[data-open-day]");
+    if (modeButton) {
+        mode = modeButton.dataset.mode;
+    } else if (step) {
+        selected = dayKey(addDays(parseDate(selected), +step.dataset.step));
+    } else if (shift) {
         month = new Date(month.getFullYear(), month.getMonth() + +shift.dataset.month, 1);
     } else if (pick) {
         selected = pick.dataset.pick;
-        const date = parseDate(selected);
-        if (date.getMonth() !== month.getMonth()) {
-            month = new Date(date.getFullYear(), date.getMonth(), 1);
-        }
+    } else if (openDay) {
+        selected = openDay.dataset.openDay;
+        mode = "day";
     } else {
         return false;
     }
+    // месяц следует за выбранным днём
+    const date = parseDate(selected);
+    if (!shift && date.getMonth() !== month.getMonth()) {
+        month = new Date(date.getFullYear(), date.getMonth(), 1);
+    }
     rerender();
+    if (mode === "day" && (modeButton || openDay)) {
+        scrollToNow();
+    }
     return true;
 }
 
