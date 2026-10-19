@@ -284,6 +284,10 @@ export async function applyPlan(plan) {
             Object.assign(state.settings, plan.backup.settings);
             await setMeta("settings", state.settings);
         }
+        for (const [key, value] of Object.entries(plan.backup.extra || {})) {
+            state[key] = value;
+            await setMeta(key, value);
+        }
         return;
     }
     const rows = plan.rows.filter(row => ["add", "update", "conflict"].includes(row.type));
@@ -395,7 +399,9 @@ export function makeBackup() {
         exportedAt: toIso(new Date()),
         settings: state.settings,
         lists: state.lists,
-        tasks: [...state.tasks.values()]
+        tasks: [...state.tasks.values()],
+        // всё остальное, что живёт в телефоне
+        extra: { templates: state.templates, chains: state.chains, goals: state.goals, habits: state.habits, habitLog: state.habitLog, focusLog: state.focusLog }
     };
 }
 

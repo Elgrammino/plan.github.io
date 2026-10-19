@@ -4,6 +4,7 @@ import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
 import { newTask, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
 import { editTemplate } from "./settings.js";
+import { startFocus } from "./focus.js";
 import { applyChain, chainTasks, planChain } from "./chains.js";
 import { readShowFields, showFieldsHtml } from "./show.js";
 import { bindPostFields, postFieldsHtml, readPostFields } from "./content.js";
@@ -204,7 +205,8 @@ export function editTask(task, draft = null) {
         </div>
         <div class="sheet-foot">
             <button class="icon-btn" id="delete" aria-label="Удалить">${ICONS.trash}</button>
-            ${draft ? "" : `<button class="btn ghost grow" id="postpone">Перенести</button>`}
+            ${draft ? "" : `<button class="icon-btn" id="focus" aria-label="Фокус">${ICONS.timer}</button>
+            <button class="btn ghost grow" id="postpone">Перенести</button>`}
             <button class="btn primary grow" data-close>Готово</button>
         </div>`, { onClose: save });
 
@@ -459,6 +461,14 @@ export function editTask(task, draft = null) {
         } else if (state.tasks.has(task.id)) {
             trashTask(task);
             showToast("Задача в корзине", "Вернуть", () => restoreTask(task));
+        }
+    });
+    $("#focus")?.addEventListener("click", () => {
+        save();
+        deleted = true; // уже сохранено
+        close();
+        if (state.tasks.has(task.id)) {
+            startFocus(task);
         }
     });
     $("#postpone")?.addEventListener("click", () => {

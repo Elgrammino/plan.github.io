@@ -1,0 +1,306 @@
+/* Этап 11: фокус, привычки, матрица, статистика. */
+
+/* ---- фокус ---- */
+.btn.icon-only {
+    flex: none !important;
+    width: var(--tap);
+    padding: 0;
+}
+
+.btn.icon-only svg,
+.sheet-foot .icon-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+.focus-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.focus-task {
+    font: 600 var(--fs-24)/1.25 var(--font-head);
+    overflow-wrap: anywhere;
+}
+
+.focus-clock {
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent);
+    margin: var(--sp-32) 0 var(--sp-16);
+}
+
+.focus-clock.over {
+    color: var(--text-2);
+}
+
+.focus .bar i {
+    background: var(--accent);
+    transition: width 1s linear;
+}
+
+.focus-note {
+    margin-top: var(--sp-8);
+    color: var(--text-2);
+}
+
+.focus-steps {
+    margin: var(--sp-24) auto 0;
+    text-align: left;
+    color: var(--text-2);
+    font-size: var(--fs-14);
+}
+
+.focus-steps .done {
+    text-decoration: line-through;
+    color: var(--text-3);
+}
+
+.focus-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-8);
+}
+
+.focus-actions .wide {
+    grid-column: 1 / -1;
+}
+
+.focus-chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* ---- привычки ---- */
+.habits-strip {
+    display: flex;
+    gap: var(--sp-8);
+    overflow-x: auto;
+    margin: var(--sp-12) calc(-1 * var(--sp-20)) 0;
+    padding: 0 var(--sp-20);
+    scrollbar-width: none;
+}
+
+.habit-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
+    min-height: 36px;
+    padding: 0 var(--sp-12) 0 var(--sp-8);
+    border-radius: 18px;
+    border: 1.5px solid var(--line);
+    font-size: var(--fs-14);
+}
+
+.habit-chip::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-3);
+}
+
+.habit-chip.done {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+}
+
+.habit-chip.done::before {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.habit-row {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--sp-12) 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.habit-row .what {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.habit-row .sub {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.habit-dots {
+    display: flex;
+    gap: 4px;
+    margin-top: var(--sp-4);
+}
+
+.habit-dots i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--surface-2);
+}
+
+.habit-dots i.on {
+    background: var(--accent);
+}
+
+.habit-dots i.none {
+    background: none;
+    border: 1px solid var(--line);
+}
+
+/* ---- матрица ---- */
+.matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-8);
+    margin-top: var(--sp-12);
+}
+
+.quadrant {
+    min-height: 160px;
+    padding: var(--sp-8);
+    border-radius: var(--r-12);
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease);
+}
+
+.quadrant.q-do {
+    background: var(--accent-soft);
+}
+
+.quadrant.drop {
+    border-color: var(--accent);
+}
+
+.q-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-14);
+}
+
+.q-hint {
+    font-size: var(--fs-12);
+    color: var(--text-3);
+    margin-bottom: var(--sp-8);
+}
+
+.m-task {
+    display: flex;
+    align-items: stretch;
+    margin-top: 4px;
+    border-radius: 8px;
+    background: var(--bg);
+}
+
+.m-task.m-dragging {
+    opacity: .3;
+}
+
+.m-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 6px var(--sp-8);
+}
+
+.m-title {
+    font-size: var(--fs-14);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.m-sub {
+    font-size: 11px;
+    color: var(--text-3);
+}
+
+.grip {
+    flex: none;
+    width: 28px;
+    display: grid;
+    place-items: center;
+    touch-action: none;
+    color: var(--text-3);
+    cursor: grab;
+}
+
+.grip svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.m-ghost {
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* ---- статистика ---- */
+.chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 120px;
+    margin: var(--sp-16) 0 var(--sp-8);
+}
+
+.chart .col {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
+}
+
+.chart .col i {
+    width: 100%;
+    min-height: 2px;
+    border-radius: 3px 3px 0 0;
+    background: var(--text-3);
+}
+
+.chart .col.today i {
+    background: var(--accent);
+}
+
+.chart .v {
+    font-size: 10px;
+    color: var(--text-2);
+}
+
+.chart .d {
+    font-size: 10px;
+    color: var(--text-3);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-12);
+    padding: var(--sp-8) 0;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.journal-sum.compact .mono {
+    font-size: var(--fs-20);
+    line-height: 1.3;
+}

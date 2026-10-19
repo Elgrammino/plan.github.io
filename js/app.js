@@ -9,6 +9,8 @@ import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboar
 import { onRitualClick } from "./rituals.js";
 import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
 import { newPost, onContentClick, renderContent } from "./content.js";
+import { openFocus, startFocus } from "./focus.js";
+import { onHabitClick } from "./habits.js";
 import { swipeRows } from "./swipe.js";
 import { onMoreClick, renderMore } from "./more.js";
 import { renderInbox, renderToday } from "./screens.js";
@@ -100,7 +102,11 @@ document.querySelector(".app").addEventListener("click", event => {
         render();
         return;
     }
-    if (onNotifyClick(event) || onRitualClick(event)) {
+    if (onNotifyClick(event) || onRitualClick(event) || onHabitClick(event)) {
+        return;
+    }
+    if (event.target.closest("[data-focus-open]")) {
+        openFocus();
         return;
     }
     if (activeScreen === "calendar" && onCalendarClick(event, render)) {
@@ -139,6 +145,9 @@ document.querySelector(".app").addEventListener("click", event => {
             break;
         case "edit":
             editTask(task);
+            break;
+        case "focus":
+            startFocus(task);
             break;
         case "postpone":
             postponeTask(task);

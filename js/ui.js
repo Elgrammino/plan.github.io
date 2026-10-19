@@ -85,6 +85,7 @@ export const ICONS = {
     search: `<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>`,
     up: `<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>`,
     down: `<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`,
+    timer: `<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg>`,
     close: `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
     trash: `<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>`
 };

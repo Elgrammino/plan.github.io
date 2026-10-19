@@ -6,6 +6,9 @@ import {
     readPackage, rollbackImport, saveFile, shiftBatch, trashBatch
 } from "./exchange.js";
 import { remindersCard } from "./notify.js";
+import { habitsSheet } from "./habits.js";
+import { openMatrix } from "./matrix.js";
+import { statsSheet } from "./stats.js";
 import { openSettings, settingsRows } from "./settings.js";
 import { state } from "./store.js";
 import { esc, haptic, openSheet, showToast } from "./ui.js";
@@ -39,6 +42,13 @@ export async function renderMore(el) {
 
         <div class="label">Настройки</div>
         ${settingsRows()}
+
+        <div class="label">Инструменты</div>
+        <div class="card">
+            <button class="batch-row" data-tool="matrix"><span class="what">Матрица Эйзенхауэра</span><span class="text-2">важно × срочно</span></button>
+            <button class="batch-row" data-tool="habits"><span class="what">Привычки</span><span class="mono text-2">${state.habits.length}</span></button>
+            <button class="batch-row" data-tool="stats"><span class="what">Статистика</span><span class="text-2">сделано, фокус, серии</span></button>
+        </div>
 
         <div class="label">Обмен с&nbsp;Claude</div>
         <div class="card stack">
@@ -91,6 +101,11 @@ fileInput.addEventListener("change", async () => {
 });
 
 export function onMoreClick(event) {
+    const tool = event.target.closest("[data-tool]")?.dataset.tool;
+    if (tool) {
+        ({ matrix: openMatrix, habits: habitsSheet, stats: statsSheet })[tool]();
+        return;
+    }
     const settingsButton = event.target.closest("[data-settings]");
     if (settingsButton) {
         openSettings(settingsButton.dataset.settings);

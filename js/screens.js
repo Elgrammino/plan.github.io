@@ -3,6 +3,8 @@ import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from ".
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listName, overdueTasks, state } from "./store.js";
 import { todayButton } from "./notify.js";
 import { departure, showDayBlock } from "./show.js";
+import { focusChip } from "./focus.js";
+import { habitsStrip } from "./habits.js";
 import { morningEntry, eveningEntry, goalsChip } from "./rituals.js";
 import { repeatText } from "./repeat.js";
 import { ICONS, esc } from "./ui.js";
@@ -112,8 +114,8 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
-        html += `<div class="today-tools">${todayButton()}${dumpEntry()}${goalsChip()}</div>`
-            + morningEntry(now) + eveningEntry(now) + showDayBlock(now);
+        html += `<div class="today-tools">${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
+            + habitsStrip(now) + morningEntry(now) + eveningEntry(now) + showDayBlock(now);
         const current = currentTask(now);
         if (current) {
             const { task, running } = current;
@@ -127,6 +129,7 @@ export function renderToday(el, viewDay) {
                     <div class="btns">
                         <button class="btn primary" data-action="toggle">Готово</button>
                         <button class="btn ghost" data-action="postpone">Перенести</button>
+                        <button class="btn ghost icon-only" data-action="focus" aria-label="Фокус">${ICONS.timer}</button>
                     </div>
                 </div>`;
         }

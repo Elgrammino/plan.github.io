@@ -11,6 +11,10 @@ export const state = {
     chains: [],         // шаблоны цепочек: [{ id, name, lines: ["-2д 12:00 Снять: {title} 1ч"] }] — см. js/chains.js
     goals: [],          // цели недели: [{ id, title, week: "2026-10-19" (понедельник), done }]
     rituals: {},        // { morning: "2026-10-19", evening: "2026-10-19" } — когда ритуал пройден
+    habits: [],         // [{ id, title, kind: "daily"|"days"|"weekly", weekdays: ["mo"], perWeek: 3, since: "2026-10-19" }]
+    habitLog: {},       // { habitId: ["2026-10-19", …] } — дни, когда привычка сделана
+    focus: null,        // идущий фокус: { taskId, startedAt, plannedMin, pausedAt, pausedMs }
+    focusLog: [],       // [{ taskId, day, minutes }] — для статистики
     dump: null,         // черновик выгрузки из головы: переживает закрытие приложения
     lastDumpDay: null   // день последней законченной выгрузки
 };
@@ -53,10 +57,14 @@ function changed() {
 }
 
 export async function loadStore() {
-    const [tasks, lists, settings, dump, lastDumpDay, templates, chains, goals, rituals] = await Promise.all([
+    const [tasks, lists, settings, dump, lastDumpDay, templates, chains, goals, rituals, habits, habitLog, focus, focusLog] = await Promise.all([
         getAll("tasks"), getAll("lists"), getMeta("settings"), getMeta("dump"), getMeta("lastDumpDay"), getMeta("templates"),
-        getMeta("chains"), getMeta("goals"), getMeta("rituals")
+        getMeta("chains"), getMeta("goals"), getMeta("rituals"), getMeta("habits"), getMeta("habitLog"), getMeta("focus"), getMeta("focusLog")
     ]);
+    state.habits = habits || [];
+    state.habitLog = habitLog || {};
+    state.focus = focus || null;
+    state.focusLog = focusLog || [];
     state.templates = templates || DEFAULT_TEMPLATES;
     state.chains = chains || DEFAULT_CHAINS;
     state.goals = goals || [];
@@ -79,6 +87,16 @@ export async function loadStore() {
 export function saveChains() {
     changed();
     return setMeta("chains", state.chains);
+}
+
+export function saveHabits() {
+    changed();
+    return Promise.all([setMeta("habits", state.habits), setMeta("habitLog", state.habitLog)]);
+}
+
+export function saveFocus() {
+    changed();
+    return Promise.all([setMeta("focus", state.focus), setMeta("focusLog", state.focusLog)]);
 }
 
 export function saveGoals() {
@@ -141,6 +159,7 @@ export function newTask(fields = {}) {
         post: null,        // публикация: { format: "reels"|"post"|"stories", rubric, hook, caption, hashtags }
         nextId: null,      // у выполненной повторяющейся: id следующего раза
         goal: null,        // id цели недели
+        urgent: null,      // срочно для матрицы: null — считать по срокам, true/false — поставлено вручную
         chainOf: null,     // задача цепочки: id главной задачи
         anchorAt: null,    // plannedAt главной задачи, от которого посчитана цепочка
         importedAt: null,  // когда задача последний раз пришла из файла

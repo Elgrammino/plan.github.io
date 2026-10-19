@@ -1,6 +1,6 @@
 // Офлайн: при первом запуске все файлы сохраняются в телефоне и дальше берутся оттуда.
 // При любом изменении файлов поднять версию здесь И в js/version.js.
-const CACHE_NAME = "plan-0.10.1";
+const CACHE_NAME = "plan-0.11.0";
 
 // пути относительно sw.js
 const ASSETS = [
@@ -15,6 +15,7 @@ const ASSETS = [
     "./css/more.css",
     "./css/rituals.css",
     "./css/content.css",
+    "./css/tools.css",
     "./js/version.js",
     "./js/app.js",
     "./js/db.js",
@@ -39,6 +40,10 @@ const ASSETS = [
     "./js/rituals.js",
     "./js/calendar.js",
     "./js/content.js",
+    "./js/focus.js",
+    "./js/habits.js",
+    "./js/matrix.js",
+    "./js/stats.js",
     "./js/exchange.js",
     "./js/more.js",
     "./docs/claude-format.md",
