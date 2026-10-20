@@ -9,7 +9,7 @@ import { guideSheet, send, test } from "./notify.js";
 import { openSettings } from "./settings.js";
 import { startTutorial } from "./tutorial.js";
 import { dayTasks, inboxTasks, overdueTasks, saveSettings, state } from "./store.js";
-import { ICONS, esc, haptic, showToast } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const isStandalone = () => navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
 
@@ -68,7 +68,7 @@ function go(step) {
 function close() {
     root?.remove();
     root = null;
-    document.body.style.overflow = "";
+    unlockScroll();
 }
 
 async function finish(screen = "today") {
@@ -84,7 +84,7 @@ function frame(body, foot) {
         root.className = "dump onboarding";
         root.setAttribute("role", "dialog");
         document.body.append(root);
-        document.body.style.overflow = "hidden";
+        lockScroll();
     }
     const dots = STEPS.map((_, i) => `<i class="${i === current ? "on" : i < current ? "past" : ""}"></i>`).join("");
     root.innerHTML = `

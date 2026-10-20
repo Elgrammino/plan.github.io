@@ -54,6 +54,28 @@ if (window.visualViewport) {
     visualViewport.addEventListener("scroll", update);
 }
 
+// Страница под шторкой и полноэкранным окном не должна ехать. На iPhone overflow: hidden у body
+// прокрутку пальцем не держит, поэтому фиксируем body на месте и возвращаем позицию после.
+// Счётчик: две шторки подряд — страница отпускается, только когда закрыта последняя.
+let scrollLocks = 0;
+let lockedY = 0;
+export function lockScroll() {
+    if (scrollLocks++ === 0) {
+        lockedY = window.scrollY;
+        Object.assign(document.body.style, { position: "fixed", top: `-${lockedY}px`, left: "0", right: "0", overflow: "hidden" });
+    }
+}
+
+export function unlockScroll() {
+    if (scrollLocks === 0) {
+        return;
+    }
+    if (--scrollLocks === 0) {
+        Object.assign(document.body.style, { position: "", top: "", left: "", right: "", overflow: "" });
+        window.scrollTo(0, lockedY);
+    }
+}
+
 // плавный уход: класс .leaving в CSS, потом удаляем
 export function leave(element, ms = 170) {
     element.classList.add("leaving");
@@ -71,7 +93,7 @@ export function openSheet(html, { onClose } = {}) {
     sheet.setAttribute("role", "dialog");
     sheet.innerHTML = `<div class="sheet-grip" aria-hidden="true"></div>` + html;
     document.body.append(backdrop, sheet);
-    document.body.style.overflow = "hidden";
+    lockScroll();
 
     let closed = false;
     const close = (how = "leave") => {
@@ -92,7 +114,7 @@ export function openSheet(html, { onClose } = {}) {
             leave(sheet);
             leave(backdrop);
         }
-        document.body.style.overflow = "";
+        unlockScroll();
     };
     backdrop.addEventListener("click", () => close());
 

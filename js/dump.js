@@ -4,7 +4,7 @@ import { durationText, hasTime, plural, relativeDay, timeText } from "./dates.js
 import { editTask } from "./sheets.js";
 import { sortThought, splitThoughts } from "./sort.js";
 import { discardTask, finishDump, listName, newTask, saveDump, saveSettings, saveTask, state } from "./store.js";
-import { ICONS, esc, haptic, showToast } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const LENGTHS = [5, 10, 15, 25];
 const HINT_EVERY = 150; // секунд: новая тема раз в 2,5 минуты
@@ -54,7 +54,7 @@ function mount(html) {
         root.className = "dump";
         root.setAttribute("role", "dialog");
         document.body.append(root);
-        document.body.style.overflow = "hidden";
+        lockScroll();
     }
     root.innerHTML = html;
     root.querySelector("[data-close]")?.addEventListener("click", unmount);
@@ -67,7 +67,7 @@ function unmount() {
     wakeLock = null;
     root?.remove();
     root = null;
-    document.body.style.overflow = "";
+    unlockScroll();
 }
 
 // ---- 1. старт ----

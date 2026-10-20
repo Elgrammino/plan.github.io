@@ -3,7 +3,7 @@
 import { addDays, dayKey, dayOf, hasTime, relativeDay, timeText } from "./dates.js";
 import { editTask } from "./sheets.js";
 import { isOverdue, onChange, saveTask, state } from "./store.js";
-import { ICONS, esc, haptic, openSheet } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, openSheet, unlockScroll } from "./ui.js";
 
 const QUADRANTS = [
     { id: "do", important: true, urgent: true, title: "Сделать", hint: "важно и срочно" },
@@ -48,7 +48,7 @@ export function openMatrix() {
     root.className = "dump matrix-screen";
     root.setAttribute("role", "dialog");
     document.body.append(root);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     root.addEventListener("click", onClick);
     root.addEventListener("pointerdown", onGrip);
     unsubscribe = onChange(render);
@@ -59,7 +59,7 @@ function close() {
     unsubscribe();
     root.remove();
     root = null;
-    document.body.style.overflow = "";
+    unlockScroll();
 }
 
 function render() {

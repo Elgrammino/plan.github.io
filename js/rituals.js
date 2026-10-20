@@ -6,7 +6,7 @@ import { goalProgress, goalsSheet, weekGoals } from "./goals.js";
 import { send } from "./notify.js";
 import { quickAdd } from "./sheets.js";
 import { dayTasks, doneByDay, inboxTasks, markRitual, onChange, overdueTasks, saveTask, setDone, state, trashTask } from "./store.js";
-import { ICONS, esc, haptic, showToast } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const minutesOf = time => time.split(":").reduce((h, m) => h * 60 + +m);
 const nowMinutes = now => now.getHours() * 60 + now.getMinutes();
@@ -66,12 +66,12 @@ function flow(steps, onFinish) {
     root.className = "dump onboarding ritual";
     root.setAttribute("role", "dialog");
     document.body.append(root);
-    document.body.style.overflow = "hidden";
+    lockScroll();
 
     const close = () => {
         unsubscribe();
         root.remove();
-        document.body.style.overflow = "";
+        unlockScroll();
     };
     closeFlow = close;
     let shown = -1; // по очереди встаёт только новый шаг, а не каждая перерисовка

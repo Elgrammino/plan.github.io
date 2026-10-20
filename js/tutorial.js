@@ -8,7 +8,7 @@ import { guideSheet, send } from "./notify.js";
 import { hideAllHints } from "./onboarding.js";
 import { evening, morning } from "./rituals.js";
 import { dayTasks, inboxTasks, onChange, state } from "./store.js";
-import { ICONS, esc, haptic } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, unlockScroll } from "./ui.js";
 
 const today = () => dayKey(new Date());
 const after = (iso, since) => !!iso && iso >= since;
@@ -332,7 +332,7 @@ function finale() {
             <button class="btn primary" data-final="go">К&nbsp;плану</button>
         </div>`;
     document.body.append(root);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     root.addEventListener("click", event => {
         const what = event.target.closest("[data-final]")?.dataset.final;
         if (what === "send") {
@@ -341,7 +341,7 @@ function finale() {
         } else if (what === "go") {
             haptic();
             root.remove();
-            document.body.style.overflow = "";
+            unlockScroll();
             document.querySelector('.tab[data-screen="today"]')?.click();
         }
     });

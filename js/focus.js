@@ -2,7 +2,7 @@
 // Состояние в базе: можно свернуть и закрыть приложение — время идёт дальше.
 import { dayKey, durationText } from "./dates.js";
 import { saveFocus, setDone, state } from "./store.js";
-import { ICONS, esc, haptic, showToast } from "./ui.js";
+import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const DEFAULT_MIN = 25;
 
@@ -59,7 +59,7 @@ export function openFocus() {
         root.className = "dump focus";
         root.setAttribute("role", "dialog");
         document.body.append(root);
-        document.body.style.overflow = "hidden";
+        lockScroll();
         root.addEventListener("click", onClick);
     }
     root.innerHTML = `
@@ -107,7 +107,7 @@ function close() {
     wakeLock = null;
     root?.remove();
     root = null;
-    document.body.style.overflow = "";
+    unlockScroll();
 }
 
 // засчитать сосредоточенные минуты; done — отметить задачу
