@@ -232,3 +232,46 @@
     font-weight: 600;
     color: var(--text);
 }
+
+/* шаг: «Поиск» — что набрать, «Блок» — как он выглядит в команде, дальше — что настроить */
+.g-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    min-width: 0;
+}
+
+.g-line {
+    display: block;
+}
+
+.g-tag {
+    display: inline-block;
+    min-width: 52px;
+    margin-right: var(--sp-8);
+    font: 600 var(--fs-12)/1.6 var(--font-body);
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.g-block {
+    color: var(--text);
+}
+
+/* синие поля, как в редакторе Быстрых команд */
+.g-var {
+    display: inline-block;
+    padding: 0 6px;
+    margin: 1px 0;
+    border-radius: 6px;
+    background: rgba(76, 154, 255, .16);
+    color: #7db6ff;
+}
+
+.guide-step input:checked + .g-body,
+.guide-step input:checked + .g-body b,
+.guide-step input:checked + .g-body .g-block,
+.guide-step input:checked + .g-body .g-var {
+    color: var(--text-3);
+}
