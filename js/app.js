@@ -9,7 +9,7 @@ import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboar
 import { onRitualClick } from "./rituals.js";
 import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
 import { newPost, onContentClick, renderContent } from "./content.js";
-import { openFocus, startFocus } from "./focus.js";
+import { openFocus, startFocus, startWork } from "./focus.js";
 import { onHabitClick } from "./habits.js";
 import { loadTutorial, resumeTutorial } from "./tutorial.js";
 import { swipeRows } from "./swipe.js";
@@ -211,6 +211,9 @@ document.querySelector(".app").addEventListener("click", event => {
             break;
         case "focus":
             startFocus(task);
+            break;
+        case "start":
+            startWork(task);
             break;
         case "postpone":
             postponeTask(task);

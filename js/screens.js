@@ -2,7 +2,7 @@
 import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listName, overdueTasks, state } from "./store.js";
 import { todayButton } from "./notify.js";
-import { departure, showDayBlock } from "./show.js";
+import { departure, showDayStrip } from "./show.js";
 import { focusChip } from "./focus.js";
 import { tutorialChip } from "./tutorial.js";
 import { habitsStrip } from "./habits.js";
@@ -87,6 +87,28 @@ function minutesBetween(a, b) {
     return Math.round((b - a) / 60000);
 }
 
+// «Дальше / Сейчас»: одно дело крупно, шаги, отсчёт и «Приступить» — 40 минут фокуса, потом перерыв
+function focusCard({ task, running }, now) {
+    const minutes = running ? minutesBetween(now, endOf(task)) : minutesBetween(now, parseDate(task.plannedAt));
+    const steps = task.checklist.filter(step => !step.done).slice(0, 6);
+    const working = state.focus && state.focus.taskId === task.id;
+    return `
+        <section class="focus-card" data-id="${task.id}">
+            <div class="label" style="margin: 0">${running ? "Сейчас" : "Дальше, в " + timeText(task.plannedAt)}</div>
+            <button class="focus-card-title" data-action="edit">${escTitle(task.title)}</button>
+            <div class="meta">${sub(task)}</div>
+            ${steps.length ? `<div class="focus-card-steps">${steps.map(step => `<span>${esc(step.text)}</span>`).join("")}</div>` : ""}
+            <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${running ? "осталось" : "до начала"}</small></div>
+            ${working
+                ? `<button class="btn primary wide" data-focus-open>Открыть таймер</button>`
+                : `<button class="btn primary wide" data-action="start">Приступить · <span class="mono">${state.settings.focusMin || 40}</span>&nbsp;мин</button>`}
+            <div class="btns">
+                <button class="btn ghost" data-action="toggle">Готово</button>
+                <button class="btn ghost" data-action="postpone">Перенести</button>
+            </div>
+        </section>`;
+}
+
 // ---- «Сегодня» ----
 export function renderToday(el, viewDay) {
     const now = new Date();
@@ -116,29 +138,18 @@ export function renderToday(el, viewDay) {
 
     if (isToday) {
         html += `<div class="today-tools">${tutorialChip()}${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
-            + habitsStrip(now) + morningEntry(now) + eveningEntry(now) + showDayBlock(now);
+            + habitsStrip(now) + morningEntry(now) + eveningEntry(now);
+        // раскладка «Фокус» (выбрана на стенде 20.10): одно дело крупно, остальное — полосами и свёрнутым днём
         const current = currentTask(now);
         if (current) {
-            const { task, running } = current;
-            const minutes = running ? minutesBetween(now, endOf(task)) : minutesBetween(now, parseDate(task.plannedAt));
-            html += `
-                <div class="now" data-id="${task.id}">
-                    <div class="label" style="margin: 0">${running ? "Сейчас" : "Дальше, в " + timeText(task.plannedAt)}</div>
-                    <div class="now-title">${esc(task.title)}</div>
-                    <div class="meta">${sub(task)}</div>
-                    <div class="timer"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${running ? "осталось" : "до начала"}</small></div>
-                    <div class="btns">
-                        <button class="btn primary" data-action="toggle">Готово</button>
-                        <button class="btn ghost" data-action="postpone">Перенести</button>
-                        <button class="btn ghost icon-only" data-action="focus" aria-label="Фокус">${ICONS.timer}</button>
-                    </div>
-                </div>`;
+            html += focusCard(current, now);
         }
+        html += showDayStrip(now);
 
         const late = overdueTasks(now).filter(task => !(task.plannedAt && task.plannedAt.startsWith(key)));
         if (late.length) {
-            html += `<div class="label">Просрочено</div>` +
-                late.map(task => row(task, { time: "", showDay: true })).join("");
+            html += `<details class="day-fold overdue-fold"><summary><span>Просрочено</span><span class="mono">${late.length}</span></summary>` +
+                late.map(task => row(task, { time: "", showDay: true })).join("") + `</details>`;
         }
     }
 
@@ -150,8 +161,14 @@ export function renderToday(el, viewDay) {
             </div>`;
     }
 
+    const fold = isToday && all.length;
+    if (fold) {
+        const open = all.filter(task => !task.done).length;
+        html += `<details class="day-fold" open><summary><span>Весь день</span><span class="mono">${open} из ${all.length}</span></summary>`;
+    }
+
     if (timed.length) {
-        html += `<div class="label">День</div>`;
+        html += fold ? "" : `<div class="label">День</div>`;
         let prevEnd = null;
         let nowShown = !isToday;
         for (const task of timed) {
@@ -175,6 +192,9 @@ export function renderToday(el, viewDay) {
 
     if (anytime.length) {
         html += `<div class="label">В течение дня</div>` + anytime.map(task => row(task, { time: "" })).join("");
+    }
+    if (fold) {
+        html += `</details>`;
     }
 
     // тихая ссылка на журнал: сколько уже успел

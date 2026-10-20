@@ -5,10 +5,10 @@ import { plural, relativeDay, timeText, toIso } from "./dates.js";
 import { handleText, refresh as refreshMore } from "./more.js";
 import { parseQuick } from "./parse.js";
 import {
-    SHORTCUT_SEND, SHORTCUT_SIRI, SHORTCUT_SYNC, applySync, lastSentAt, looksLikeSync,
+    SHORTCUT_SEND, SHORTCUT_SIRI, SHORTCUT_SYNC, SHORTCUT_TIMER, applySync, lastSentAt, looksLikeSync,
     pendingChanges, readSync, reminderItems, runShortcut, sendToReminders
 } from "./reminders.js";
-import { newTask, saveTask, state } from "./store.js";
+import { newTask, saveSettings, saveTask, state } from "./store.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const remindersWord = n => `${n} ${plural(n, "напоминание", "напоминания", "напоминаний")}`;
@@ -228,7 +228,8 @@ function dictatedSheet(text) {
 const SHORTCUT_LINKS = {
     send: "https://www.icloud.com/shortcuts/a6bd3eec82234147b8d21c9a766af3e7",
     sync: "https://www.icloud.com/shortcuts/89f883d1d2244cdc956e73541fea08c0",
-    siri: "https://www.icloud.com/shortcuts/02335f2e64334334993553a5e9316be5"
+    siri: "https://www.icloud.com/shortcuts/02335f2e64334334993553a5e9316be5",
+    timer: ""
 };
 
 const PICK = "нажми поле → «Выбрать переменную» → коснись блока";
@@ -333,6 +334,19 @@ const guideParts = () => [
             { set: "Долгое нажатие на экран блокировки → «Настроить» → экран блокировки → «Добавить виджеты» → <b>Напоминания</b> → список <i>План</i>. В виджете будут только задачи: ритуалы в другом списке." },
             { set: "По желанию так же на экран «Домой»." }
         ]
+    },
+    {
+        id: "timer", title: "6. Таймер фокуса", intro: "«Приступить» на «Сегодня» запускает 40 минут работы и 5 минут перерыва. Пока План открыт, звонит он сам. Чтобы звонило и на заблокированном телефоне, План запускает таймер «Часов» этой командой.",
+        steps: [
+            { set: `Новая команда: «+» → «Переименовать» → <code>${SHORTCUT_TIMER}</code>.` },
+            { find: "запустить таймер", name: "Запустить таймер", block: "Запустить таймер на [длительность]",
+                set: "Нажми длительность → в поле числа «Выбрать переменную» → <b>Входные данные команды</b>. Единица — <b>мин</b>.",
+                alt: "Если переменной нет в списке, сначала включи шаг ниже (приём текста), потом вернись сюда." },
+            { set: "Внизу экрана команды нажми <b>ⓘ</b> → включи приём входных данных и выбери тип <b>Текст</b>.",
+                alt: "Пункт может называться «Получать входные данные» или «Показывать в общем доступе». Не нашёл — пришли скриншот этого экрана." },
+            { set: `Проверь: <button class="chip-btn" data-timer-test>Таймер на 1 минуту</button> Откроются Быстрые команды, в «Часах» пойдёт таймер. Вернись в План.` },
+            { set: `Пришёл звонок через минуту? <button class="chip-btn" data-timer-on>${state.settings.timerAlarm ? "Звонок включён" : "Включить звонок"}</button>` }
+        ]
     }
 ];
 
@@ -404,6 +418,23 @@ export async function guideSheet(open = null) {
         }).join("");
     };
     render();
+
+    sheet.querySelector("#guideParts").addEventListener("click", event => {
+        const timer = event.target.closest("[data-timer-test], [data-timer-on]");
+        if (!timer) {
+            return;
+        }
+        event.preventDefault();
+        haptic();
+        if (timer.matches("[data-timer-test]")) {
+            runShortcut(SHORTCUT_TIMER, "1");
+        } else {
+            state.settings.timerAlarm = true;
+            saveSettings();
+            timer.textContent = "Звонок включён";
+            showToast("Готово: «Приступить» будет звонить таймером «Часов»");
+        }
+    });
 
     // жёлтое (code) — то, что вставляется в команду: касание копирует
     sheet.querySelector("#guideParts").addEventListener("click", event => {

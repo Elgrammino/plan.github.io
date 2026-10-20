@@ -3,7 +3,7 @@
 import { dayKey, dayOf, hasTime, parseDate, timeText, toIso } from "./dates.js";
 import { chainTasks } from "./chains.js";
 import { state } from "./store.js";
-import { esc } from "./ui.js";
+import { esc, escTitle } from "./ui.js";
 
 const ICON_PHONE = `<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>`;
 const ICON_ROUTE = `<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`;
@@ -88,6 +88,23 @@ export function readShowFields(sheet) {
 }
 
 // ---- «Сегодня»: блок дня выступления ----
+// раскладка «Фокус» на «Сегодня»: выступление — одна полоса (время, выезд, позвонить, маршрут), карточка — по нажатию
+export function showDayStrip(now = new Date()) {
+    const key = dayKey(now);
+    return [...state.tasks.values()]
+        .filter(task => task.kind === "show" && !task.done && !task.deletedAt && dayOf(task.plannedAt) === key)
+        .sort((a, b) => (a.plannedAt || "").localeCompare(b.plannedAt || ""))
+        .map(task => {
+            const leave = departure(task);
+            const when = hasTime(task.plannedAt) ? `в <b class="mono">${timeText(task.plannedAt)}</b>` : "сегодня";
+            return `
+                <div class="show-strip" data-id="${task.id}">
+                    <button class="show-strip-text" data-action="edit">${escTitle(task.title)} ${when}${leave ? `, выезд <b class="mono">${timeText(toIso(leave))}</b>` : ""}</button>
+                    <div class="show-strip-actions">${actions(task.show)}</div>
+                </div>`;
+        }).join("");
+}
+
 export function showDayBlock(now = new Date()) {
     const key = dayKey(now);
     const shows = [...state.tasks.values()]

@@ -403,3 +403,22 @@
     color: var(--accent);
     font-weight: 600;
 }
+
+/* перерыв: что дальше */
+.focus-next {
+    margin-top: var(--sp-16);
+    color: var(--text-2);
+    font-size: var(--fs-16);
+    text-align: center;
+}
+
+.focus-next b {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.focus-done {
+    margin-bottom: var(--sp-24);
+    color: var(--accent);
+    font-weight: 600;
+}

@@ -11,6 +11,7 @@ import { saveTask, setDone, state } from "./store.js";
 export const SHORTCUT_SEND = "План: отправить";
 export const SHORTCUT_SYNC = "План: сверить";
 export const SHORTCUT_SIRI = "Добавь в план";
+export const SHORTCUT_TIMER = "План: таймер"; // запускает таймер «Часов» на присланное число минут
 
 const WINDOW_DAYS = 14;
 const NAG_MINUTES = [0, 10, 20]; // настойчиво: три напоминания с одной меткой задачи
@@ -104,9 +105,9 @@ export async function sendToReminders(items) {
 
 let launchedAt = 0;
 
-export function runShortcut(name) {
+export function runShortcut(name, text) {
     launchedAt = Date.now();
-    location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name);
+    location.href = "shortcuts://run-shortcut?name=" + encodeURIComponent(name) + (text ? "&input=text&text=" + encodeURIComponent(text) : "");
 }
 
 // сразу после запуска команды не предлагаем «Вставить»: в буфере наш же JSON

@@ -23,6 +23,9 @@ function defaultSettings() {
     return {
         dayLimitMin: 7 * 60,
         dumpMin: 10,
+        focusMin: 40,              // «Приступить»: столько работаем…
+        breakMin: 5,               // …и столько отдыхаем
+        timerAlarm: false,         // звонить таймером «Часов» через команду «План: таймер» (включается в мастере)
         morning: "08:00",          // утренний ритуал
         evening: "20:00",          // вечерний ритуал: с этого времени зовём на выгрузку
         postpone: ["15m", "1h", "evening", "tomorrow", "weekend"],

@@ -651,3 +651,130 @@ input[type="time"].input {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
+/* ---- «Сегодня» в раскладке «Фокус»: одно дело крупно ---- */
+.focus-card {
+    margin-top: var(--sp-12);
+    padding: var(--sp-20);
+    border-radius: var(--r-16);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+}
+
+.focus-card-title {
+    text-align: left;
+    font: 600 var(--fs-30)/1.15 var(--font-head);
+    letter-spacing: -.02em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
+.focus-card-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    margin-top: var(--sp-4);
+}
+
+.focus-card-steps span {
+    padding: var(--sp-4) var(--sp-12);
+    border-radius: var(--r-12);
+    background: var(--surface);
+    font-size: var(--fs-14);
+}
+
+.focus-card-count {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-8);
+    margin: var(--sp-12) 0 var(--sp-4);
+}
+
+.focus-card-count .mono {
+    font-size: var(--fs-48);
+    line-height: 1;
+}
+
+.focus-card-count small {
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.focus-card .btns .btn {
+    flex: 1;
+}
+
+/* выступление и просрочка — полосами под главным делом */
+.show-strip {
+    margin-top: var(--sp-12);
+    padding: var(--sp-12) var(--sp-16);
+    border-radius: var(--r-16);
+    background: var(--accent-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+}
+
+.show-strip-text {
+    text-align: left;
+    font-size: var(--fs-16);
+}
+
+.show-strip-text b {
+    font-weight: 500;
+}
+
+.show-strip-actions {
+    display: flex;
+    gap: var(--sp-8);
+}
+
+.show-strip-actions .btn {
+    flex: 1;
+    min-height: 40px;
+    font-size: var(--fs-14);
+}
+
+.show-strip-actions svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* свёрнутые блоки дня */
+.day-fold {
+    margin-top: var(--sp-16);
+}
+
+.day-fold > summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: var(--tap);
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.day-fold > summary::-webkit-details-marker {
+    display: none;
+}
+
+.day-fold > summary .mono {
+    font-weight: 400;
+    color: var(--text-3);
+}
+
+.overdue-fold {
+    padding: 0 var(--sp-16);
+    border-radius: var(--r-16);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--alert) 55%, transparent);
+}
+
+.overdue-fold > summary {
+    color: var(--text);
+}
