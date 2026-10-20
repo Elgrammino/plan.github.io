@@ -308,6 +308,7 @@ function undoLast() {
 // перетаскивание пальцем; короткое касание без сдвига — onTap
 function swipeable(card, onSwipe, onTap) {
     let startX = null;
+    let startT = 0;
     let dx = 0;
     const reset = () => {
         startX = null;
@@ -317,6 +318,7 @@ function swipeable(card, onSwipe, onTap) {
     };
     card.addEventListener("pointerdown", event => {
         startX = event.clientX;
+        startT = event.timeStamp;
         dx = 0;
         card.setPointerCapture(event.pointerId);
         card.classList.add("dragging");
@@ -329,14 +331,16 @@ function swipeable(card, onSwipe, onTap) {
         card.style.transform = `translateX(${dx}px) rotate(${dx / 24}deg)`;
         card.dataset.dir = dx > 40 ? "right" : dx < -40 ? "left" : "";
     });
-    card.addEventListener("pointerup", () => {
+    card.addEventListener("pointerup", event => {
         if (startX === null) {
             return;
         }
         const moved = dx;
         card.classList.remove("dragging");
         startX = null;
-        if (Math.abs(moved) > card.offsetWidth * 0.3) {
+        // далеко протянули или быстро смахнули
+        const flick = Math.abs(moved) >= 24 && Math.abs(moved) / Math.max(1, event.timeStamp - startT) > 0.11;
+        if (Math.abs(moved) > card.offsetWidth * 0.3 || flick) {
             onSwipe(moved > 0 ? "right" : "left");
             return;
         }

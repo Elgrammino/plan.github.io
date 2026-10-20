@@ -376,25 +376,100 @@ button {
     stroke: var(--accent);
 }
 
-.tab[aria-current="page"]::before {
-    content: "";
+/* облачко под активной вкладкой: переезжает к нажатой (позицию ставит app.js) */
+.tab-pill {
     position: absolute;
-    top: calc(-1 * var(--sp-4) - 1px);
-    width: 20px;
-    height: 2px;
-    border-radius: var(--r-2);
-    background: var(--accent);
+    top: calc(var(--sp-4) + 4px);
+    left: 0;
+    height: calc(var(--tabbar-h) - 8px);
+    border-radius: var(--r-16);
+    background: var(--accent-soft);
+    pointer-events: none;
+    transition: transform var(--dur-slide) var(--ease-drawer);
 }
 
-/* ручка шторки: на iOS так понятно, что это шторка */
-.sheet::before {
-    content: "";
+.tab-pill.instant {
+    transition: none;
+}
+
+.tab {
+    z-index: 1;
+}
+
+/* ручка шторки: на iOS так понятно, что это шторка; за полосу с ней шторку смахивают вниз */
+.sheet-grip {
     flex: none;
+    display: flex;
+    justify-content: center;
+    padding: var(--sp-8) 0 var(--sp-4);
+    touch-action: none;
+    cursor: grab;
+}
+
+.sheet-grip::before {
+    content: "";
     width: 36px;
     height: 5px;
-    margin: var(--sp-8) auto 0;
     border-radius: var(--r-4);
     background: var(--surface-2);
+}
+
+/* уход шторки — туда же, откуда пришла */
+.sheet.leaving {
+    animation: none;
+    transition: transform var(--dur-exit) var(--ease-in), opacity var(--dur-exit) var(--ease-in);
+    transform: translateY(24px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sheet.dragging {
+    animation: none;
+    transition: none;
+}
+
+.sheet.settle {
+    animation: none;
+    transition: transform var(--dur) var(--ease);
+}
+
+.sheet.dismiss {
+    animation: none;
+    transition: transform var(--dur) var(--ease-drawer);
+    transform: translateY(100%);
+    pointer-events: none;
+}
+
+.backdrop.leaving {
+    animation: none;
+    transition: opacity var(--dur-exit) var(--ease-in);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* тост уходит вниз и тает */
+.toast.leaving {
+    animation: none;
+    transition: transform var(--dur-exit) var(--ease-in), opacity var(--dur-exit) var(--ease-in);
+    transform: translateY(14px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* редкие экраны (ритуалы, «План готов»): блоки встают по очереди */
+.enter > * {
+    animation: rise 260ms var(--ease) both;
+}
+
+.enter > :nth-child(2) { animation-delay: 45ms; }
+.enter > :nth-child(3) { animation-delay: 90ms; }
+.enter > :nth-child(4) { animation-delay: 135ms; }
+.enter > :nth-child(5) { animation-delay: 180ms; }
+.enter > :nth-child(6) { animation-delay: 225ms; }
+.enter > :nth-child(n + 7) { animation-delay: 270ms; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
 }
 
 /* «Уменьшение движения» в iOS: гасим все анимации, включая те, что не на токенах */

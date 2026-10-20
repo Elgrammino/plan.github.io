@@ -34,12 +34,12 @@ export function showToast(text, actionText, action, ms = 4000) {
     toast.setAttribute("role", "status"); // VoiceOver прочитает, фокус не уводит
     toast.innerHTML = `<span>${esc(text)}</span>` + (actionText ? `<button class="btn ghost">${esc(actionText)}</button>` : "");
     toast.querySelector("button")?.addEventListener("click", () => {
-        toast.remove();
+        leave(toast);
         action();
     });
     document.body.append(toast);
     if (ms) {
-        toastTimer = setTimeout(() => toast.remove(), ms);
+        toastTimer = setTimeout(() => leave(toast), ms);
     }
 }
 
@@ -54,29 +54,87 @@ if (window.visualViewport) {
     visualViewport.addEventListener("scroll", update);
 }
 
+// плавный уход: класс .leaving в CSS, потом удаляем
+export function leave(element, ms = 170) {
+    element.classList.add("leaving");
+    element.inert = true;
+    setTimeout(() => element.remove(), ms);
+}
+
+const FLICK = 0.11; // px/мс: быстрее — считаем смахиванием, даже если протянули немного
+
 export function openSheet(html, { onClose } = {}) {
     const backdrop = document.createElement("div");
     backdrop.className = "backdrop";
     const sheet = document.createElement("div");
     sheet.className = "sheet";
     sheet.setAttribute("role", "dialog");
-    sheet.innerHTML = html;
+    sheet.innerHTML = `<div class="sheet-grip" aria-hidden="true"></div>` + html;
     document.body.append(backdrop, sheet);
     document.body.style.overflow = "hidden";
 
     let closed = false;
-    const close = () => {
+    const close = (how = "leave") => {
         if (closed) {
             return;
         }
         closed = true;
         onClose?.();
-        backdrop.remove();
-        sheet.remove();
+        if (how === "dismiss") {
+            // смахнули: уезжает вниз целиком, с той точки, где отпустили
+            sheet.classList.remove("dragging", "settle");
+            sheet.style.transform = "";
+            sheet.classList.add("dismiss");
+            sheet.inert = true;
+            setTimeout(() => sheet.remove(), 260);
+            leave(backdrop);
+        } else {
+            leave(sheet);
+            leave(backdrop);
+        }
         document.body.style.overflow = "";
     };
-    backdrop.addEventListener("click", close);
-    return { sheet, close };
+    backdrop.addEventListener("click", () => close());
+
+    // тянуть вниз за полосу с ручкой: идёт за пальцем; ниже трети или быстрый взмах — закрыть
+    const grip = sheet.querySelector(".sheet-grip");
+    let startY = 0, startT = 0, dy = 0, pointer = null;
+    grip.addEventListener("pointerdown", event => {
+        pointer = event.pointerId;
+        startY = event.clientY;
+        startT = event.timeStamp;
+        dy = 0;
+        grip.setPointerCapture(pointer);
+        sheet.classList.remove("settle");
+        sheet.classList.add("dragging");
+    });
+    grip.addEventListener("pointermove", event => {
+        if (event.pointerId !== pointer) {
+            return;
+        }
+        const raw = event.clientY - startY;
+        dy = raw > 0 ? raw : -Math.sqrt(-raw) * 2; // вверх — с сопротивлением
+        sheet.style.transform = `translateY(${dy}px)`;
+        backdrop.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / sheet.offsetHeight));
+    });
+    const release = event => {
+        if (event.pointerId !== pointer) {
+            return;
+        }
+        pointer = null;
+        sheet.classList.remove("dragging");
+        const speed = dy / Math.max(1, event.timeStamp - startT);
+        if (dy > sheet.offsetHeight / 3 || (speed > FLICK && dy > 12)) {
+            close("dismiss");
+        } else {
+            sheet.classList.add("settle");
+            sheet.style.transform = "";
+            backdrop.style.opacity = "";
+        }
+    };
+    grip.addEventListener("pointerup", release);
+    grip.addEventListener("pointercancel", release);
+    return { sheet, close: () => close() };
 }
 
 export const ICONS = {

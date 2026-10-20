@@ -74,8 +74,11 @@ function flow(steps, onFinish) {
         document.body.style.overflow = "";
     };
     closeFlow = close;
+    let shown = -1; // по очереди встаёт только новый шаг, а не каждая перерисовка
     const render = () => {
         const step = steps[current];
+        const fresh = shown !== current;
+        shown = current;
         const last = current === steps.length - 1;
         root.innerHTML = `
             <div class="dump-top">
@@ -83,7 +86,7 @@ function flow(steps, onFinish) {
                 <span class="dots">${steps.map((_, i) => `<i class="${i === current ? "on" : i < current ? "past" : ""}"></i>`).join("")}</span>
                 <span style="width: var(--tap)"></span>
             </div>
-            <div class="onboarding-body">
+            <div class="onboarding-body${fresh ? " enter" : ""}">
                 <h1 class="title">${step.title}</h1>
                 ${step.body()}
             </div>

@@ -69,14 +69,32 @@ let viewDay = new Date();
 const tabs = document.querySelectorAll(".tab");
 const screens = document.querySelectorAll(".screen");
 
+// облачко под активной вкладкой: переезжает к нажатой; при первом показе и повороте — без анимации
+const pill = document.querySelector(".tab-pill");
+function placePill(animate) {
+    const tab = [...tabs].find(item => item.dataset.screen === activeScreen);
+    if (!tab || !pill || !tab.offsetWidth) {
+        return;
+    }
+    const width = Math.min(tab.offsetWidth - 8, 84);
+    pill.classList.toggle("instant", !animate);
+    pill.style.width = width + "px";
+    pill.style.transform = `translateX(${tab.offsetLeft + (tab.offsetWidth - width) / 2}px)`;
+}
+
 function showScreen(id) {
     activeScreen = id;
     screens.forEach(screen => screen.hidden = screen.id !== id);
     tabs.forEach(tab => tab.dataset.screen === id ? tab.setAttribute("aria-current", "page") : tab.removeAttribute("aria-current"));
+    placePill(true);
     document.getElementById("fab").hidden = id === "more";
     window.scrollTo(0, 0);
     render();
 }
+
+placePill(false);
+document.fonts?.ready.then(() => placePill(false)); // ширина вкладок зависит от шрифта
+window.addEventListener("resize", () => placePill(false));
 
 tabs.forEach(tab => tab.addEventListener("click", () => {
     if (tab.dataset.screen === "today" && activeScreen === "today") {

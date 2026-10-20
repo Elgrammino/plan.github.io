@@ -32,8 +32,7 @@
     margin-top: var(--sp-16);
     padding: var(--sp-16);
     border-radius: var(--r-16);
-    background: var(--surface);
-    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
 }
 
 .show-title {

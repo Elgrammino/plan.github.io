@@ -2,11 +2,15 @@
 // Строка двигается только по горизонтали, вертикальную прокрутку отдаём браузеру (touch-action: pan-y).
 const LIMIT = 72;  // столько пикселей нужно протянуть, чтобы сработало
 const START = 10;  // до этого сдвига не решаем, свайп это или прокрутка
+const FLICK = 0.11; // px/мс: быстрый короткий взмах тоже засчитывается…
+const FLICK_MIN = 24; // …если строку сдвинули хотя бы на столько
 
 export function swipeRows(container, { onRight, onLeft }) {
     let row = null;
     let startX = 0;
     let startY = 0;
+    let startT = 0;
+    let lastDx = 0;
     let active = false;
     let swallowClick = false;
 
@@ -27,6 +31,8 @@ export function swipeRows(container, { onRight, onLeft }) {
         }
         startX = event.clientX;
         startY = event.clientY;
+        startT = event.timeStamp;
+        lastDx = 0;
         active = false;
     });
 
@@ -48,6 +54,7 @@ export function swipeRows(container, { onRight, onLeft }) {
             row.setPointerCapture?.(event.pointerId);
             row.classList.add("swiping");
         }
+        lastDx = dx;
         row.style.setProperty("--dx", dx + "px");
         row.dataset.dir = dx > 0 ? "right" : "left";
         if (Math.abs(dx) > LIMIT) {
@@ -57,7 +64,7 @@ export function swipeRows(container, { onRight, onLeft }) {
         }
     });
 
-    container.addEventListener("pointerup", () => {
+    container.addEventListener("pointerup", event => {
         if (!row) {
             return;
         }
@@ -69,7 +76,8 @@ export function swipeRows(container, { onRight, onLeft }) {
         // после свайпа браузер пришлёт click по кнопке под пальцем — его глотаем
         swallowClick = true;
         setTimeout(() => swallowClick = false, 400);
-        const dir = target.dataset.ready !== undefined ? target.dataset.dir : null;
+        const flick = Math.abs(lastDx) >= FLICK_MIN && Math.abs(lastDx) / Math.max(1, event.timeStamp - startT) > FLICK;
+        const dir = target.dataset.ready !== undefined || flick ? target.dataset.dir : null;
         reset(target);
         if (dir === "right") {
             onRight(target);

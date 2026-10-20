@@ -235,7 +235,7 @@ function ritualsStep() {
     $("#editLists").addEventListener("click", () => {
         openSettings("lists");
         // после закрытия шторки списков обновляем строку с названиями
-        const sheets = document.querySelectorAll(".sheet");
+        const sheets = document.querySelectorAll(".sheet:not(.leaving)");
         sheets[sheets.length - 1]?.querySelector("[data-close]")?.addEventListener("click", () => ritualsStep());
     });
 }

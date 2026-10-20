@@ -316,7 +316,7 @@ function finale() {
     root.setAttribute("role", "dialog");
     root.innerHTML = `
         <div class="dump-top"><span></span><span class="dump-count">Обучение пройдено</span><span style="width: var(--tap)"></span></div>
-        <div class="onboarding-body">
+        <div class="onboarding-body enter">
             <h1 class="title">План готов</h1>
             <p class="lead">Сегодня <b>${todayList.length}</b>${minutes ? ` (${durationText(minutes)})` : ""}, завтра <b>${tomorrowList.length}</b>, на&nbsp;неделе <b>${week}</b>${goals.length ? `, целей недели <b>${goals.length}</b>` : ""}${state.habits.length ? `, привычек <b>${state.habits.length}</b>` : ""}.</p>
             <div class="card stack routine">
