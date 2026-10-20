@@ -127,7 +127,7 @@
     display: block;
     font-size: var(--fs-30);
     line-height: 1.1;
-    color: var(--accent);
+    color: var(--text); /* итоги — текстом: золото только на главном действии */
 }
 
 .journal-sum small {

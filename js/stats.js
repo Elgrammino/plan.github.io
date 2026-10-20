@@ -26,12 +26,47 @@ function doneStreak(count, now) {
     return days;
 }
 
+// столбики по дням (один ряд, без легенды): подписаны только сегодня и максимум,
+// любое значение — касанием по столбику; полный список значений — в aria-label для VoiceOver
+function columns(days, value, format, now, title) {
+    const values = days.map(day => value(dayKey(day)));
+    const max = Math.max(1, ...values);
+    const maxIndex = values.indexOf(Math.max(...values));
+    const todayKey = dayKey(now);
+    const name = day => day.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "short" });
+    const spoken = days.map((day, i) => `${name(day)}: ${format(values[i]) || "0"}`).join("; ");
+    return `
+        <div class="chart" role="img" aria-label="${esc(title)}. ${esc(spoken)}">
+            ${days.map((day, i) => {
+                const today = dayKey(day) === todayKey;
+                const labelled = values[i] && (today || i === maxIndex);
+                return `<button class="col ${today ? "today" : ""}" data-col="${esc(name(day))} · ${esc(format(values[i]) || "0")}" aria-hidden="true" tabindex="-1">
+                    <span class="mono v">${labelled ? esc(format(values[i])) : ""}</span>
+                    <i style="transform: scaleY(${values[i] / max})"></i>
+                    <span class="d">${day.toLocaleDateString("ru-RU", { weekday: "short" }).slice(0, 2)}</span>
+                </button>`;
+            }).join("")}
+        </div>
+        <p class="chart-readout" aria-hidden="true">Нажми на столбик — покажу день</p>`;
+}
+
+// «на что ушёл фокус»: полоски по убыванию, длина — доля от лидера
+function barList(rows) {
+    const max = Math.max(1, ...rows.map(([, minutes]) => minutes));
+    return `<div class="bar-list">${rows.map(([title, minutes]) => `
+        <div class="bar-row">
+            <div class="bar-row-text"><span>${esc(title)}</span><span class="mono text-2">${durationText(minutes)}</span></div>
+            <i style="transform: scaleX(${minutes / max})"></i>
+        </div>`).join("")}</div>`;
+}
+
 export function statsSheet() {
     const now = new Date();
     const count = doneCounts(now);
     const sum = days => Array.from({ length: days }, (_, i) => count(dayKey(addDays(now, -i)))).reduce((a, b) => a + b, 0);
     const days = Array.from({ length: DAYS }, (_, i) => addDays(now, i - DAYS + 1));
-    const max = Math.max(1, ...days.map(day => count(dayKey(day))));
+    const focusByDay = new Map();
+    state.focusLog.forEach(entry => focusByDay.set(entry.day, (focusByDay.get(entry.day) || 0) + entry.minutes));
     const since = days => dayKey(addDays(now, -days + 1));
 
     // на что ушёл фокус за 30 дней
@@ -48,25 +83,16 @@ export function statsSheet() {
             <div class="journal-sum">
                 ${tile(sum(1), "сегодня")}${tile(sum(7), "за&nbsp;7 дней")}${tile(sum(30), "за&nbsp;30 дней")}
             </div>
-            <div class="chart" role="img" aria-label="Сделано по дням за две недели">
-                ${days.map(day => {
-                    const value = count(dayKey(day));
-                    return `<div class="col ${dayKey(day) === dayKey(now) ? "today" : ""}">
-                        <span class="mono v">${value || ""}</span>
-                        <i style="height: ${value / max * 100}%"></i>
-                        <span class="d">${day.toLocaleDateString("ru-RU", { weekday: "short" }).slice(0, 2)}</span>
-                    </div>`;
-                }).join("")}
-            </div>
+            ${columns(days, count, value => value ? String(value) : "", now, "Сделано по дням за две недели")}
             <p class="hint">Серия: <b class="mono">${series}</b> ${plural(series, "день", "дня", "дней")} подряд хотя&nbsp;бы с&nbsp;одной сделанной задачей.</p>
 
             <div class="label">Фокус</div>
             <div class="journal-sum compact">
                 ${tile(durationText(focusMinutes(since(1))) || "0", "сегодня")}${tile(durationText(focusMinutes(since(7))) || "0", "за&nbsp;7 дней")}${tile(durationText(focusMinutes(since(30))) || "0", "за&nbsp;30 дней")}
             </div>
-            ${topFocus.length ? topFocus.map(([id, minutes]) => `
-                <div class="stat-row"><span>${esc(state.tasks.get(id)?.title || "удалённая задача")}</span><span class="mono text-2">${durationText(minutes)}</span></div>`).join("")
-                : `<p class="hint">Таймер фокуса запускается кнопкой «Фокус» в&nbsp;блоке «Сейчас» или в&nbsp;карточке задачи.</p>`}
+            ${columns(days, day => focusByDay.get(day) || 0, durationText, now, "Фокус по дням за две недели")}
+            ${topFocus.length ? `<div class="label">На что ушёл фокус за&nbsp;30 дней</div>` + barList(topFocus.map(([id, minutes]) => [state.tasks.get(id)?.title || "удалённая задача", minutes]))
+                : `<p class="hint">Фокус запускается кнопкой «Приступить» на&nbsp;«Сегодня» или часиками в&nbsp;карточке задачи.</p>`}
 
             <div class="label">Привычки</div>
             ${state.habits.map(habit => {
@@ -77,5 +103,16 @@ export function statsSheet() {
         <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
     sheet.classList.add("tall");
     sheet.querySelector("[data-close]").addEventListener("click", close);
+    // касание по столбику: день и значение в строке под этим графиком
+    sheet.addEventListener("click", event => {
+        const col = event.target.closest("[data-col]");
+        if (!col) {
+            return;
+        }
+        const chart = col.closest(".chart");
+        chart.querySelectorAll(".col.sel").forEach(item => item.classList.remove("sel"));
+        col.classList.add("sel");
+        chart.nextElementSibling.textContent = col.dataset.col;
+    });
 }
 

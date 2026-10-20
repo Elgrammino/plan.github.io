@@ -256,13 +256,26 @@
 
 /* ---- статистика ---- */
 .chart {
+    position: relative;
     display: flex;
     align-items: flex-end;
-    gap: 4px;
+    gap: 2px;
     height: 120px;
-    margin: var(--sp-16) 0 var(--sp-8);
+    margin: var(--sp-16) 0 var(--sp-4);
 }
 
+/* базовая линия: тонкая, на ступень от фона */
+.chart::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+    height: 1px;
+    background: var(--line);
+}
+
+/* столбик — кнопка во всю колонку: попасть пальцем легче, чем в сам столбик */
 .chart .col {
     flex: 1;
     height: 100%;
@@ -275,23 +288,67 @@
 
 .chart .col i {
     width: 100%;
-    min-height: 2px;
+    max-width: 24px;
+    flex: 1;
+    max-height: calc(100% - 34px);
     border-radius: var(--r-4) var(--r-4) 0 0;
-    background: var(--text-3);
+    background: color-mix(in srgb, var(--text) 40%, transparent); /* тише: «сегодня» золотом читается сразу (проверено валидатором dataviz) */
+    transform-origin: bottom;
 }
 
 .chart .col.today i {
     background: var(--accent);
 }
 
+.chart .col.sel i {
+    background: var(--text-2);
+}
+
+.chart .col.today.sel i {
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--raised), 0 0 0 3px var(--text-2);
+}
+
 .chart .v {
+    min-height: 14px;
     font-size: var(--fs-11);
     color: var(--text-2);
+    white-space: nowrap;
 }
 
 .chart .d {
     font-size: var(--fs-11);
     color: var(--text-3);
+}
+
+.chart-readout {
+    min-height: 20px;
+    margin: 0 0 var(--sp-8);
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+/* полоски «на что ушёл фокус» */
+.bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-12);
+}
+
+.bar-row-text {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-12);
+    overflow-wrap: anywhere;
+}
+
+.bar-row i {
+    display: block;
+    height: 6px;
+    margin-top: var(--sp-4);
+    border-radius: 0 var(--r-4) var(--r-4) 0;
+    background: color-mix(in srgb, var(--text) 40%, transparent);
+    transform-origin: left;
 }
 
 .stat-row {
