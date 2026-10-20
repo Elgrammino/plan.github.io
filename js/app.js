@@ -51,9 +51,16 @@ function applyIosGap() {
     document.documentElement.style.setProperty("--ios-gap", measureIosGap() + "px");
 }
 
+// Без сети приложение встаёт из кэша раньше, чем окно получит свой размер, а resize потом не приходит:
+// первый замер даёт лишний зазор и панель уезжает под край. Поэтому перемеряем, когда окно устоится.
 applyIosGap();
 window.addEventListener("resize", applyIosGap);
+window.visualViewport?.addEventListener("resize", applyIosGap);
 window.addEventListener("orientationchange", () => setTimeout(applyIosGap, 300));
+window.addEventListener("load", applyIosGap);
+window.addEventListener("pageshow", applyIosGap);
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && setTimeout(applyIosGap, 100));
+[150, 500, 1500].forEach(delay => setTimeout(applyIosGap, delay));
 
 let activeScreen = "today";
 let viewDay = new Date();
