@@ -56,6 +56,18 @@ label:has(> input[type="radio"]) {
     -webkit-touch-callout: none;
 }
 
+/* заголовки без одинокого слова на последней строке, абзацы — без висячих коротких */
+h1,
+h2,
+h3,
+.title {
+    text-wrap: balance;
+}
+
+p {
+    text-wrap: pretty;
+}
+
 button {
     font: inherit;
     color: inherit;
@@ -259,7 +271,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: var(--sp-4);
-    font-size: 11px;
+    font-size: var(--fs-11);
     color: var(--text-3);
     transition: color var(--dur-fast) var(--ease);
 }
@@ -370,7 +382,7 @@ button {
     top: calc(-1 * var(--sp-4) - 1px);
     width: 20px;
     height: 2px;
-    border-radius: 1px;
+    border-radius: var(--r-2);
     background: var(--accent);
 }
 
@@ -381,7 +393,7 @@ button {
     width: 36px;
     height: 5px;
     margin: var(--sp-8) auto 0;
-    border-radius: 3px;
+    border-radius: var(--r-4);
     background: var(--surface-2);
 }
 

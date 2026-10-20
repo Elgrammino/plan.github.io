@@ -227,7 +227,7 @@
 
 .onboarding .dots i.on {
     width: 18px;
-    border-radius: 3px;
+    border-radius: var(--r-4);
     background: var(--accent);
 }
 

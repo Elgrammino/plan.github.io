@@ -31,7 +31,7 @@
 }
 
 .focus-clock {
-    font-size: 72px;
+    font-size: var(--fs-72);
     line-height: 1;
     color: var(--accent);
     margin: var(--sp-32) 0 var(--sp-16);
@@ -95,7 +95,7 @@
     gap: var(--sp-8);
     min-height: 36px;
     padding: 0 var(--sp-12) 0 var(--sp-8);
-    border-radius: 18px;
+    border-radius: var(--r-pill);
     border: 1.5px solid var(--line);
     font-size: var(--fs-14);
 }
@@ -146,7 +146,7 @@
 .habit-dots i {
     width: 12px;
     height: 12px;
-    border-radius: 3px;
+    border-radius: var(--r-4);
     background: var(--surface-2);
 }
 
@@ -200,7 +200,7 @@
     display: flex;
     align-items: stretch;
     margin-top: 4px;
-    border-radius: 8px;
+    border-radius: var(--r-8);
     background: var(--bg);
 }
 
@@ -224,7 +224,7 @@
 }
 
 .m-sub {
-    font-size: 11px;
+    font-size: var(--fs-11);
     color: var(--text-3);
 }
 
@@ -273,7 +273,7 @@
 .chart .col i {
     width: 100%;
     min-height: 2px;
-    border-radius: 3px 3px 0 0;
+    border-radius: var(--r-4) var(--r-4) 0 0;
     background: var(--text-3);
 }
 
@@ -282,12 +282,12 @@
 }
 
 .chart .v {
-    font-size: 11px;
+    font-size: var(--fs-11);
     color: var(--text-2);
 }
 
 .chart .d {
-    font-size: 11px;
+    font-size: var(--fs-11);
     color: var(--text-3);
 }
 
@@ -336,7 +336,7 @@
 
 .coach-bar {
     height: 3px;
-    border-radius: 2px;
+    border-radius: var(--r-2);
     background: var(--surface-2);
     overflow: hidden;
 }
