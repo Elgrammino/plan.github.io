@@ -5,7 +5,7 @@ import { nextDate, repeatText } from "./repeat.js";
 import { row } from "./screens.js";
 import { editTask } from "./sheets.js";
 import { newTask, state } from "./store.js";
-import { ICONS, esc } from "./ui.js";
+import { esc, escTitle, ICONS } from "./ui.js";
 
 const WEEKDAYS = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
 
@@ -95,7 +95,7 @@ function virtualRow(task) {
             <span class="time mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : ""}</span>
             <span class="check" aria-hidden="true"></span>
             <button class="body" data-action="edit">
-                <div class="name">${esc(task.title)}</div>
+                <div class="name">${escTitle(task.title)}</div>
                 <div class="sub">↻ ${esc(repeatText(task.repeat))} · появится, когда отметишь предыдущий раз</div>
             </button>
         </div>`;

@@ -8,7 +8,7 @@ import { tutorialChip } from "./tutorial.js";
 import { habitsStrip } from "./habits.js";
 import { morningEntry, eveningEntry, goalsChip } from "./rituals.js";
 import { repeatText } from "./repeat.js";
-import { ICONS, esc } from "./ui.js";
+import { esc, escTitle, ICONS } from "./ui.js";
 
 const ENERGY_DOTS = { low: "●", mid: "●●", high: "●●●" };
 
@@ -53,7 +53,7 @@ export function row(task, { time = null, side = "", showDay = false } = {}) {
             ${time !== null ? `<span class="time mono">${time}</span>` : ""}
             <button class="check" data-action="toggle" aria-label="${task.done ? "Вернуть" : "Готово"}"></button>
             <button class="body" data-action="edit">
-                <div class="name">${esc(task.title)}</div>
+                <div class="name">${escTitle(task.title)}</div>
                 ${details ? `<div class="sub">${details}</div>` : ""}
             </button>
             ${side}

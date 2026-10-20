@@ -6,7 +6,7 @@ import { goalProgress, goalsSheet, weekGoals } from "./goals.js";
 import { send } from "./notify.js";
 import { quickAdd } from "./sheets.js";
 import { dayTasks, doneByDay, inboxTasks, markRitual, onChange, overdueTasks, saveTask, setDone, state, trashTask } from "./store.js";
-import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
+import { esc, escTitle, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const minutesOf = time => time.split(":").reduce((h, m) => h * 60 + +m);
 const nowMinutes = now => now.getHours() * 60 + now.getMinutes();
@@ -127,7 +127,7 @@ function row(task, buttons, sub = when(task)) {
     return `
         <div class="ritual-row" data-id="${task.id}">
             <div class="what">
-                <div class="name">${esc(task.title)}</div>
+                <div class="name">${escTitle(task.title)}</div>
                 <div class="sub">${esc(sub)}${task.durationMin ? " · " + durationText(task.durationMin) : ""}</div>
             </div>
             <div class="ritual-btns">${buttons.map(([act, label]) => `<button class="chip-btn" data-act="${act}">${label}</button>`).join("")}</div>

@@ -4,6 +4,11 @@ export function esc(text) {
     return String(text ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
 }
 
+// название задачи: «14-го», «2-й» не рвутся на дефисе (неразрывный дефис между цифрой и окончанием)
+export function escTitle(text) {
+    return esc(text).replace(/(\d)-(?=[а-яё])/gi, "$1‑");
+}
+
 // ---- вибрация ----
 // В Safari на iPhone нет navigator.vibrate, но переключение системного <input type="checkbox" switch> (iOS 18+)
 // даёт лёгкий тик. Работает только внутри нажатия (обработчик click), как в калькуляторе.

@@ -4,7 +4,7 @@ import { monthGrid, monthRange, occurrences } from "./calendar.js";
 import { dayKey, dayOf, hasTime, parseDate, relativeDay, timeText } from "./dates.js";
 import { editTask } from "./sheets.js";
 import { newTask, saveTask, setDone, state } from "./store.js";
-import { esc, haptic, showToast } from "./ui.js";
+import { esc, escTitle, haptic, showToast } from "./ui.js";
 
 const STAGES = ["идея", "сценарий", "снято", "смонтировано", "вышло"];
 const FORMATS = [["reels", "Рилс"], ["post", "Пост"], ["stories", "Сторис"]];
@@ -33,7 +33,7 @@ function card(task) {
         <div class="post-card stage-${STAGES.indexOf(stage)}" data-id="${task.id}">
             <span class="format">${icon(task)}</span>
             <button class="body" data-action="edit">
-                <div class="name">${esc(task.title)}</div>
+                <div class="name">${escTitle(task.title)}</div>
                 <div class="sub">${esc([when(task), task.post?.rubric].filter(Boolean).join(" · "))}</div>
                 ${task.post?.hook ? `<div class="hook">${esc(task.post.hook)}</div>` : ""}
             </button>

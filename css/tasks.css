@@ -297,7 +297,7 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
+    background: var(--raised); /* на ступень светлее страницы: шторка — слой поверх */
     border-radius: var(--r-16) var(--r-16) 0 0;
     border-top: 1px solid var(--line);
     animation: slide-up var(--dur) var(--ease);
@@ -342,7 +342,7 @@
 .textarea {
     width: 100%;
     font: inherit;
-    font-size: var(--fs-16); /* меньше 16 px — iOS приближает страницу при вводе */
+    font-size: var(--fs-17); /* не меньше 16 px — иначе iOS приближает страницу при вводе */
     color: var(--text);
     background: var(--surface);
     border: 1.5px solid transparent;

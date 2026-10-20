@@ -12,6 +12,7 @@
     --line: color-mix(in srgb, var(--text) 10%, transparent);      /* разделители */
     --surface: color-mix(in srgb, var(--text) 8%, transparent);    /* фон карточек и вторичных кнопок */
     --surface-2: color-mix(in srgb, var(--text) 12%, transparent); /* нажатая карточка, дорожка прогресса */
+    --raised: color-mix(in srgb, var(--text) 6%, var(--bg));        /* непрозрачная ступень над страницей: шторки, тосты */
     --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
     --accent-line: color-mix(in srgb, var(--accent) 55%, transparent);
     --on-accent: var(--bg); /* текст на заливке акцента всегда цвета фона */
@@ -29,6 +30,7 @@
     --fs-12: 12px;
     --fs-14: 14px;
     --fs-16: 16px;
+    --fs-17: 17px;  /* основной текст, как в iOS */
     --fs-18: 18px;
     --fs-20: 20px;
     --fs-24: 24px;

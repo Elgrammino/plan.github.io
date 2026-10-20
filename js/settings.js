@@ -10,7 +10,7 @@ import {
     POSTPONE, doneByDay, listName, onChange, postponed, purgeTasks, putTasks, restoreTask, saveSettings,
     saveChains, saveTemplates, setLists, state, trashedTasks
 } from "./store.js";
-import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
+import { esc, escTitle, haptic, ICONS, openSheet, showToast } from "./ui.js";
 
 const DUMP_LENGTHS = [5, 10, 15, 25];
 
@@ -426,7 +426,7 @@ function trashSheet() {
             return `
                 <div class="item" data-id="${task.id}">
                     <div class="body">
-                        <div class="name">${esc(task.title)}</div>
+                        <div class="name">${escTitle(task.title)}</div>
                         <div class="sub">удалено ${esc(relativeDay(task.deletedAt))} · сотрётся через ${left} ${plural(left, "день", "дня", "дней")}</div>
                     </div>
                     <button class="chip-btn side" data-restore>Вернуть</button>
@@ -488,7 +488,7 @@ export function journalSheet() {
                 <div class="label journal-day"><span>${esc(head)}</span><span class="mono">${tasks.length}${minutes ? " · " + durationText(minutes) : ""}</span></div>
                 ${tasks.map(task => `
                     <button class="result" data-id="${task.id}">
-                        <div class="name">${esc(task.title)}</div>
+                        <div class="name">${escTitle(task.title)}</div>
                         <div class="sub">${[timeText(task.doneAt), listName(task.list), task.durationMin && durationText(task.durationMin), task.repeat && "↻ " + repeatText(task.repeat)].filter(Boolean).map(esc).join(" · ")}</div>
                     </button>`).join("")}`;
         }).join("") : `<p class="search-empty">Пока ничего не&nbsp;отмечено. Отмеченные задачи соберутся здесь по&nbsp;дням.</p>`);

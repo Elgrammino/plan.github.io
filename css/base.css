@@ -36,7 +36,7 @@ body {
 
 body {
     font-family: var(--font-body);
-    font-size: var(--fs-16);
+    font-size: var(--fs-17); /* как основной текст iOS: читается как Напоминания */
     line-height: 1.45;
     font-kerning: normal;
     -webkit-font-smoothing: antialiased;
@@ -62,6 +62,16 @@ h2,
 h3,
 .title {
     text-wrap: balance;
+}
+
+/* заголовки Literata собраны плотнее, как у Apple и Linear */
+h1,
+h2,
+.sheet h2,
+.now .now-title,
+.show-title,
+.deck-card .name {
+    letter-spacing: -.02em;
 }
 
 p {
@@ -110,7 +120,7 @@ button {
 
 .title {
     font: 600 var(--fs-26)/1.1 var(--font-head);
-    letter-spacing: -.01em;
+    letter-spacing: -.02em;
     margin: var(--sp-8) 0 var(--sp-4);
 }
 
@@ -301,7 +311,7 @@ button {
     align-items: center;
     gap: var(--sp-12);
     padding: var(--sp-8) var(--sp-8) var(--sp-8) var(--sp-16);
-    background: var(--bg);
+    background: var(--raised);
     border: 1.5px solid var(--accent-line);
     border-radius: var(--r-16);
     animation: appear var(--dur) var(--ease);
