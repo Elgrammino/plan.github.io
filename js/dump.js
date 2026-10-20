@@ -132,7 +132,7 @@ function writeScreen() {
         const over = left === 0;
         $("#timer").innerHTML = over ? `<small>время вышло</small>` : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
         $("#timer").classList.toggle("over", over);
-        $("#progress").style.width = Math.min(100, elapsed / total * 100) + "%";
+        $("#progress").style.transform = `scaleX(${Math.min(1, elapsed / total)})`;
         $("#toSort").classList.toggle("ready", over && dump.thoughts.length > 0);
         const index = (Math.floor(elapsed / HINT_EVERY) + hintShift) % HINTS.length;
         if (index !== shownHint) {

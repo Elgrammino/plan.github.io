@@ -66,11 +66,10 @@
     /* движение: коротко и тихо */
     --dur-fast: 120ms;
     --dur: 220ms;
-    --ease: cubic-bezier(.2, .7, .2, 1);
-    --ease-in: cubic-bezier(.4, 0, 1, 1);         /* уход: ускоряется к концу */
+    --ease: cubic-bezier(.23, 1, .32, 1);         /* сильный ease-out: трогается сразу */
     --ease-drawer: cubic-bezier(.32, .72, 0, 1);  /* шторка и облачко вкладок: быстро стартует, мягко садится */
-    --dur-exit: 160ms;
-    --dur-slide: 380ms;
+    --dur-exit: 150ms;
+    --dur-slide: 260ms;
 
     /* безопасные зоны iPhone */
     --safe-top: env(safe-area-inset-top, 0px);
@@ -81,11 +80,4 @@
     color-scheme: dark;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    :root {
-        --dur-fast: 1ms;
-        --dur: 1ms;
-        --dur-exit: 1ms;
-        --dur-slide: 1ms;
-    }
-}
+/* «Уменьшение движения»: сдвиги выключает base.css, длительности проявлений остаются */

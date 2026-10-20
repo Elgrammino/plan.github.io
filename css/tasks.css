@@ -159,7 +159,12 @@
     border-radius: 50%;
     border: 1.5px solid var(--text-3);
     box-sizing: border-box;
-    transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+    transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+/* отметка — самое частое действие: кружок сжимается под пальцем */
+.item .check:active::before {
+    transform: scale(.88);
 }
 
 .item .body {

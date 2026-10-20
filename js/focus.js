@@ -202,7 +202,7 @@ function update() {
     const clockEl = root.querySelector("#focusClock");
     clockEl.textContent = over ? "+" + clock(-left) : clock(left);
     clockEl.classList.toggle("over", over);
-    root.querySelector("#focusBar").style.width = Math.min(100, elapsedMs(focus) / (focus.plannedMin * 60000) * 100) + "%";
+    root.querySelector("#focusBar").style.transform = `scaleX(${Math.min(1, elapsedMs(focus) / (focus.plannedMin * 60000))})`;
     const note = root.querySelector("#focusNote");
     if (note) {
         note.textContent = focus.pausedAt ? "Пауза" : over ? `${durationText(focus.plannedMin)} прошли. Перерыв?` : `из ${durationText(focus.plannedMin)}`;
