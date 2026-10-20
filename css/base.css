@@ -91,7 +91,7 @@ button {
 .app {
     min-height: 100%;
     padding: calc(var(--safe-top) + var(--sp-16)) calc(var(--safe-right) + var(--sp-20))
-             calc(var(--safe-bottom) + var(--tabbar-h) + var(--sp-32)) calc(var(--safe-left) + var(--sp-20));
+             calc(var(--safe-bottom) + var(--tabbar-h) + 56px + var(--sp-32)) calc(var(--safe-left) + var(--sp-20)); /* 56px — кнопка «+», чтобы она не закрывала последнюю строку */
     max-width: 640px;
     margin: 0 auto;
 }
@@ -109,7 +109,7 @@ button {
 }
 
 .title {
-    font: 600 var(--fs-30)/1.1 var(--font-head);
+    font: 600 var(--fs-26)/1.1 var(--font-head);
     letter-spacing: -.01em;
     margin: var(--sp-8) 0 var(--sp-4);
 }
@@ -121,9 +121,8 @@ button {
 }
 
 .label {
-    font-size: var(--fs-12);
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    font-size: var(--fs-14);
+    font-weight: 600;
     color: var(--text-3);
     margin: var(--sp-24) 0 var(--sp-8);
 }
@@ -367,13 +366,9 @@ button {
     inset: -6px -2px;
 }
 
-/* активная вкладка: золотая иконка и тонкая метка у верхнего края панели */
+/* активная вкладка: светлее остальных и стоит на облачке */
 .tab {
     position: relative;
-}
-
-.tab[aria-current="page"] svg {
-    stroke: var(--accent);
 }
 
 /* облачко под активной вкладкой: переезжает к нажатой (позицию ставит app.js) */
@@ -383,7 +378,7 @@ button {
     left: 0;
     height: calc(var(--tabbar-h) - 8px);
     border-radius: var(--r-16);
-    background: var(--accent-soft);
+    background: var(--surface-2);
     pointer-events: none;
     transition: transform var(--dur-slide) var(--ease-drawer);
 }

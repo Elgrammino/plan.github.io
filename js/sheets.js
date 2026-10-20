@@ -97,7 +97,7 @@ export function quickAdd() {
         }
         haptic();
         saveTask(newTask(fields));
-        added.insertAdjacentHTML("afterbegin", `<div>✓ ${esc(fields.title)} · ${describe(fields)}</div>`);
+        added.insertAdjacentHTML("afterbegin", `<div class="added-row">${ICONS.check}<span>${esc(fields.title)} · ${describe(fields)}</span></div>`);
         input.value = "";
         preview.innerHTML = "";
         input.focus();

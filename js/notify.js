@@ -9,7 +9,7 @@ import {
     pendingChanges, readSync, reminderItems, runShortcut, sendToReminders
 } from "./reminders.js";
 import { newTask, saveTask, state } from "./store.js";
-import { esc, haptic, openSheet, showToast } from "./ui.js";
+import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const remindersWord = n => `${n} ${plural(n, "напоминание", "напоминания", "напоминаний")}`;
 const when = iso => iso ? `${relativeDay(iso)} в ${timeText(iso)}` : "ещё не было";
@@ -390,7 +390,7 @@ export async function guideSheet(open = null) {
             const firstOpen = GUIDE.find(item => item.steps.some((_, i) => !checks[`${item.id}-${i}`]));
             return `
                 <details ${part === firstOpen ? "open" : ""} class="${complete ? "complete" : ""}">
-                    <summary><span>${part.title}</span><span class="mono guide-count">${complete ? "✓" : `${done}/${part.steps.length}`}</span></summary>
+                    <summary><span>${part.title}</span><span class="mono guide-count">${complete ? ICONS.check : `${done}/${part.steps.length}`}</span></summary>
                     <p class="text-2">${part.intro}</p>
                     ${SHORTCUT_LINKS[part.id] ? `
                         <a class="btn primary wide" href="${esc(SHORTCUT_LINKS[part.id])}" target="_blank" rel="noopener">Добавить команду одним нажатием</a>

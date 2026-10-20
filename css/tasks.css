@@ -74,10 +74,10 @@
 }
 
 /* ---- «Сейчас» ---- */
+/* «Сейчас/Дальше» выделен фоном и размером, золото на нём только у кнопки «Готово» */
 .now {
     border-radius: var(--r-16);
-    background: var(--accent-soft);
-    border: 1.5px solid var(--accent-line);
+    background: var(--surface);
     padding: var(--sp-16);
     margin-top: var(--sp-8);
 }
@@ -90,7 +90,7 @@
 
 .now .timer {
     font-size: var(--fs-30);
-    color: var(--accent);
+    color: var(--text);
     line-height: 1;
     margin: var(--sp-12) 0 var(--sp-16);
 }
@@ -549,10 +549,8 @@ input[type="time"].input {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    font-size: var(--fs-12);
+    font-size: var(--fs-14);
     font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
     color: var(--text-3);
     transition: color var(--dur-fast) var(--ease);
 }
@@ -633,4 +631,23 @@ input[type="time"].input {
 
 [hidden] {
     display: none !important;
+}
+
+/* галочка у только что добавленного и у готового раздела мастера команд */
+.added-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
+}
+
+.added-row svg,
+.guide-count svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }

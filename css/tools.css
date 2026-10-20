@@ -329,8 +329,7 @@
 
 .coach-part {
     font-size: var(--fs-12);
-    letter-spacing: .06em;
-    text-transform: uppercase;
+    font-weight: 600;
     color: var(--text-2);
 }
 

@@ -123,7 +123,7 @@ export function renderToday(el, viewDay) {
             const minutes = running ? minutesBetween(now, endOf(task)) : minutesBetween(now, parseDate(task.plannedAt));
             html += `
                 <div class="now" data-id="${task.id}">
-                    <div class="label" style="margin: 0">${running ? "Сейчас" : "Дальше · в " + timeText(task.plannedAt)}</div>
+                    <div class="label" style="margin: 0">${running ? "Сейчас" : "Дальше, в " + timeText(task.plannedAt)}</div>
                     <div class="now-title">${esc(task.title)}</div>
                     <div class="meta">${sub(task)}</div>
                     <div class="timer"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${running ? "осталось" : "до начала"}</small></div>

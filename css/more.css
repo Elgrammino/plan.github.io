@@ -251,8 +251,6 @@
     margin-right: var(--sp-8);
     font: 600 var(--fs-12)/1.6 var(--font-body);
     color: var(--text-3);
-    text-transform: uppercase;
-    letter-spacing: .04em;
 }
 
 .g-block {

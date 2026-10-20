@@ -167,8 +167,6 @@
     top: var(--sp-16);
     font-size: var(--fs-14);
     font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
 }
 
 .deck-card[data-dir="right"] {
