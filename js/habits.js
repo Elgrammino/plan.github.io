@@ -129,7 +129,9 @@ function kindText(habit) {
         return "по " + (habit.weekdays || []).map(day => WEEKDAY_SHORT[day]).join(", ");
     }
     if (habit.kind === "weekly") {
-        return `${habit.perWeek} раз в неделю`;
+        // 1 раз, 2–4 раза, 5 раз; 12–14 — «раз»
+        const n = habit.perWeek;
+        return `${n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "раза" : "раз"} в неделю`;
     }
     return "каждый день";
 }

@@ -293,10 +293,19 @@ export function editTask(task, draft = null) {
         $("#checklist").innerHTML = steps.map((step, i) => `
             <div class="checklist-item">
                 <input type="checkbox" data-i="${i}" ${step.done ? "checked" : ""} aria-label="Шаг сделан">
-                <input class="input" data-i="${i}" value="${esc(step.text)}">
+                <textarea class="input" data-i="${i}" rows="1">${esc(step.text)}</textarea>
             </div>`).join("");
+        // длинный шаг переносится, а не уезжает за край поля
+        $("#checklist").querySelectorAll("textarea").forEach(autoGrow);
     };
     renderSteps();
+    // шаг — одна строка: Enter закрывает правку, а не вставляет перенос
+    $("#checklist").addEventListener("keydown", event => {
+        if (event.key === "Enter" && event.target.tagName === "TEXTAREA") {
+            event.preventDefault();
+            event.target.blur();
+        }
+    });
     $("#checklist").addEventListener("change", event => {
         const step = steps[event.target.dataset.i];
         if (event.target.type === "checkbox") {

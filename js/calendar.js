@@ -219,9 +219,11 @@ function dayView() {
             ${selected === dayKey(now) && nowMin >= first * 60 ? `<div class="grid-now" style="top: ${top(nowMin)}px"></div>` : ""}
             ${blocks.map(({ item, start, end, col, cols }) => {
                 const begin = parseDate(item.task.plannedAt);
-                const finish = item.task.durationMin ? "–" + clock(new Date(begin.getTime() + item.task.durationMin * 60000)) : "";
+                const short = end - start < 45;
+                // у короткой задачи время в строку с названием — только начало, иначе не влезает
+                const finish = item.task.durationMin && !short ? "–" + clock(new Date(begin.getTime() + item.task.durationMin * 60000)) : "";
                 return `
-                <button class="block ${end - start < 45 ? "short" : ""} ${item.virtual ? "virtual" : ""} ${item.task.done ? "done" : ""} ${item.task.kind === "show" ? "show" : ""}"
+                <button class="block ${short ? "short" : ""} ${cols >= 3 ? "narrow" : ""} ${item.virtual ? "virtual" : ""} ${item.task.done ? "done" : ""} ${item.task.kind === "show" ? "show" : ""}"
                         data-id="${item.task.id}" data-action="edit"
                         style="top: ${top(start)}px; height: ${Math.max(22, top(end) - top(start) - 2)}px; left: calc(52px + (100% - 52px) * ${col / cols}); width: calc((100% - 52px) / ${cols} - 3px)">
                     <span class="block-title">${esc(item.task.title)}${item.virtual ? " ↻" : ""}</span>

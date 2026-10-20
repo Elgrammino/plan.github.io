@@ -390,6 +390,8 @@
     font-size: var(--fs-14);
     line-height: 1.25;
     font-weight: 600;
+    overflow-wrap: anywhere;
+    hyphens: auto;
 }
 
 .block-time {
@@ -406,8 +408,19 @@
 }
 
 .block.short .block-title {
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
+}
+
+.block.short .block-time {
+    flex: none;
+    white-space: nowrap;
+}
+
+/* три задачи рядом: колонка узкая, время видно по сетке — место отдаём названию */
+.block.narrow .block-time {
+    display: none;
 }

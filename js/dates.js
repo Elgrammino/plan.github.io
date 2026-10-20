@@ -57,10 +57,11 @@ export function durationText(minutes) {
     }
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
+    // неразрывные пробелы: «1 ч 30» не рвётся по строкам
     if (!h) {
-        return `${m} мин`;
+        return `${m} мин`;
     }
-    return m ? `${h} ч ${m}` : `${h} ч`;
+    return m ? `${h} ч ${m}` : `${h} ч`;
 }
 
 // «сегодня», «завтра», «пт, 7 нояб.» — для подписей у задач

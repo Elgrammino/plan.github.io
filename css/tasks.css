@@ -44,6 +44,12 @@
     color: var(--text-2);
 }
 
+/* «21 ч 1 из 7 ч» не рвётся: уступает подпись слева */
+.load .mono {
+    flex: none;
+    white-space: nowrap;
+}
+
 .bar {
     height: 4px;
     border-radius: 2px;
@@ -449,13 +455,14 @@ input[type="time"].input {
 /* ---- чек-лист ---- */
 .checklist-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--sp-8);
 }
 
 .checklist-item input[type="checkbox"] {
     width: 22px;
     height: 22px;
+    margin-top: 9px; /* по первой строке текста */
     accent-color: var(--accent);
     flex: none;
 }
@@ -463,6 +470,8 @@ input[type="time"].input {
 .checklist-item .input {
     background: none;
     padding: var(--sp-8) 0;
+    resize: none;
+    overflow: hidden;
 }
 
 /* ---- быстрое добавление ---- */
