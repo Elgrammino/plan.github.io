@@ -199,7 +199,7 @@ function render() {
             <span class="coach-part">${esc(step.part)} · <span class="mono">${progress.index + 1}/${STEPS.length}</span></span>
             <button class="icon-btn" data-coach="hide" aria-label="Свернуть">${ICONS.close}</button>
         </div>
-        <div class="coach-bar"><i style="width: ${progress.index / STEPS.length * 100}%"></i></div>
+        <div class="coach-bar"><i style="transform: scaleX(${(progress.index / STEPS.length * 100) / 100})"></i></div>
         <div class="coach-title">${esc(step.title)}</div>
         <div class="coach-text">${esc(step.text)}</div>
         <div class="coach-btns">

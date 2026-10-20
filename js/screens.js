@@ -132,7 +132,7 @@ export function renderToday(el, viewDay) {
             <span>${esc(weekdayLine(viewDay, isToday))}${over ? " · больше лимита на " + durationText(planned - limit) : ""}</span>
             <span class="mono">${durationText(planned) || "0 ч"} из ${durationText(limit)}</span>
         </div>
-        <div class="bar ${over ? "over" : ""}"><i style="width: ${Math.min(100, planned / limit * 100)}%"></i></div>
+        <div class="bar ${over ? "over" : ""}"><i style="transform: scaleX(${(Math.min(100, planned / limit * 100)) / 100})"></i></div>
         ${isToday ? "" : `<button class="chip-btn back-today" data-day="0">К сегодня</button>`}
         <div id="installHint"></div>`;
 

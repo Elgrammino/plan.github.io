@@ -45,7 +45,7 @@ export function goalsSheet() {
                     <label class="goal-check"><input type="checkbox" data-done ${goal.done ? "checked" : ""} aria-label="Цель достигнута"></label>
                     <div class="what">
                         <div class="name">${esc(goal.title)}</div>
-                        <div class="bar"><i style="width: ${total ? done / total * 100 : 0}%"></i></div>
+                        <div class="bar"><i style="transform: scaleX(${(total ? done / total * 100 : 0) / 100})"></i></div>
                         <div class="sub mono">${total ? `${done} из ${total}` : "задач пока нет"}</div>
                     </div>
                     <button class="icon-btn" data-remove aria-label="Удалить">×</button>

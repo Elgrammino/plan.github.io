@@ -175,7 +175,7 @@ function loadBar({ minutes, limit, over }) {
     return `
         <div class="load"><span>${over > 0 ? "Больше лимита на " + durationText(over) : "Влезает в&nbsp;лимит"}</span>
             <span class="mono">${durationText(minutes) || "0 ч"} из ${durationText(limit)}</span></div>
-        <div class="bar ${over > 0 ? "over" : ""}"><i style="width: ${Math.min(100, minutes / limit * 100)}%"></i></div>`;
+        <div class="bar ${over > 0 ? "over" : ""}"><i style="transform: scaleX(${(Math.min(100, minutes / limit * 100)) / 100})"></i></div>`;
 }
 
 function goalsLine() {

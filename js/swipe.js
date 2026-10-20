@@ -16,7 +16,7 @@ export function swipeRows(container, { onRight, onLeft }) {
 
     const reset = target => {
         target.classList.remove("swiping");
-        target.style.removeProperty("--dx");
+        [...target.children].forEach(child => child.style.transform = "");
         delete target.dataset.dir;
         delete target.dataset.ready;
     };
@@ -55,7 +55,10 @@ export function swipeRows(container, { onRight, onLeft }) {
             row.classList.add("swiping");
         }
         lastDx = dx;
-        row.style.setProperty("--dx", dx + "px");
+        // transform прямо на детях: переменная на строке пересчитывала бы стили всех потомков каждый кадр
+        for (const child of row.children) {
+            child.style.transform = `translateX(${dx}px)`;
+        }
         row.dataset.dir = dx > 0 ? "right" : "left";
         if (Math.abs(dx) > LIMIT) {
             row.dataset.ready = "";

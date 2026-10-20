@@ -122,7 +122,7 @@ function loadLine(planned) {
     return `
         <div class="load"><span>${planned > limit ? "Больше лимита на " + durationText(planned - limit) : "Загрузка дня"}</span>
             <span class="mono">${durationText(planned) || "0 ч"} из ${durationText(limit)}</span></div>
-        <div class="bar ${planned > limit ? "over" : ""}"><i style="width: ${Math.min(100, planned / limit * 100)}%"></i></div>`;
+        <div class="bar ${planned > limit ? "over" : ""}"><i style="transform: scaleX(${(Math.min(100, planned / limit * 100)) / 100})"></i></div>`;
 }
 
 // ---- месяц ----
@@ -158,7 +158,7 @@ function weekView() {
                     <span class="week-name">${esc(capital(day.toLocaleDateString("ru-RU", { weekday: "short", day: "numeric" })))}</span>
                     <span class="mono text-2">${planned ? durationText(planned) : ""}</span>
                 </button>
-                ${planned ? `<div class="bar ${planned > limit ? "over" : ""}"><i style="width: ${Math.min(100, planned / limit * 100)}%"></i></div>` : ""}
+                ${planned ? `<div class="bar ${planned > limit ? "over" : ""}"><i style="transform: scaleX(${(Math.min(100, planned / limit * 100)) / 100})"></i></div>` : ""}
                 ${list.map(({ task, virtual }) => `
                     <button class="week-task ${virtual ? "virtual" : ""} ${task.done ? "done" : ""} ${task.kind === "show" ? "show" : ""}" data-id="${task.id}" data-action="edit">
                         <span class="mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : "·"}</span>${esc(task.title)}${virtual ? " ↻" : ""}

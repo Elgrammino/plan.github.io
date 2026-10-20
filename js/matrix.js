@@ -147,7 +147,7 @@ function onGrip(event) {
     const box = card.getBoundingClientRect();
     const ghost = card.cloneNode(true);
     ghost.classList.add("m-ghost");
-    Object.assign(ghost.style, { width: box.width + "px", left: box.left + "px", top: box.top + "px" });
+    Object.assign(ghost.style, { width: box.width + "px", left: "0", top: "0" }); // положение — только transform
     document.body.append(ghost);
     card.classList.add("m-dragging");
     const dx = event.clientX - box.left;
@@ -155,11 +155,10 @@ function onGrip(event) {
     let target = null;
 
     const moveTo = (x, y) => {
-        ghost.style.left = x - dx + "px";
-        ghost.style.top = y - dy + "px";
-        ghost.hidden = true; // чтобы elementFromPoint видел квадрат под копией
+        // transform, а не left/top: призрак едет за пальцем без пересчёта раскладки
+        ghost.style.transform = `translate(${x - dx}px, ${y - dy}px)`;
+        // у копии pointer-events: none — elementFromPoint её и так не видит; прятать её каждый кадр не нужно
         const under = document.elementFromPoint(x, y)?.closest("[data-quadrant]");
-        ghost.hidden = false;
         if (under !== target) {
             target?.classList.remove("drop");
             target = under;

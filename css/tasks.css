@@ -60,9 +60,12 @@
 
 .bar i {
     display: block;
+    width: 100%;
     height: 100%;
     background: var(--text-2);
-    transition: width var(--dur) var(--ease);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur) var(--ease); /* scaleX, а не width: без пересчёта раскладки */
 }
 
 .bar.over i {
@@ -546,7 +549,6 @@ input[type="time"].input {
 }
 
 .item.swiping > * {
-    transform: translateX(var(--dx, 0));
     transition: none;
 }
 
