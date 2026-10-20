@@ -5,8 +5,12 @@ icons/icon.svg
 .claude/
 .playwright-cli/
 ЖУРНАЛ.md
+PRODUCT.md
+DESIGN.md
+.impeccable/
 
 # скриншоты с телефона
 *.heic
 *.HEIC
 IMG_*
+команды/

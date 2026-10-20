@@ -230,7 +230,7 @@ function dictatedSheet(text) {
 const SHORTCUT_LINKS = {
     send: "https://www.icloud.com/shortcuts/a6bd3eec82234147b8d21c9a766af3e7",
     sync: "https://www.icloud.com/shortcuts/89f883d1d2244cdc956e73541fea08c0",
-    siri: ""
+    siri: "https://www.icloud.com/shortcuts/02335f2e64334334993553a5e9316be5"
 };
 
 const PICK = "нажми поле → «Выбрать переменную» → коснись блока";

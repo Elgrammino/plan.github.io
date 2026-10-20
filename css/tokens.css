@@ -15,6 +15,9 @@
     --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
     --accent-line: color-mix(in srgb, var(--accent) 55%, transparent);
     --on-accent: var(--bg); /* текст на заливке акцента всегда цвета фона */
+    /* исключение: синие поля мастера Быстрых команд повторяют редактор iOS, чтобы их узнавали; больше нигде */
+    --shortcuts-var: #7DB6FF;
+    --shortcuts-var-bg: color-mix(in srgb, #4C9AFF 16%, transparent);
 
     /* шрифты */
     --font-head: "Literata", Georgia, serif;
