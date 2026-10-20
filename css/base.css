@@ -44,6 +44,18 @@ body {
     overscroll-behavior: none;
 }
 
+/* Элементы управления ведут себя как в приложении: касание срабатывает сразу (без ожидания двойного),
+   долгое нажатие не выделяет надпись и не открывает меню «Скопировать». Текст задач и заметок — выделяется. */
+button,
+a,
+[role="button"],
+label:has(> input[type="radio"]) {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
 button {
     font: inherit;
     color: inherit;
