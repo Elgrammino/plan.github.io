@@ -116,9 +116,7 @@ button {
     display: none;
 }
 
-.screen {
-    animation: appear var(--dur) var(--ease);
-}
+/* экран вкладки появляется сразу: переключают десятки раз в день, отклик даёт облачко на панели */
 
 @keyframes appear {
     from { opacity: 0; }

@@ -85,7 +85,7 @@
 }
 
 .dump-hint.fresh {
-    animation: appear 600ms var(--ease);
+    animation: rise 300ms var(--ease);
 }
 
 .dump-input {
@@ -106,7 +106,7 @@
 
 .dump-list div:first-child {
     color: var(--text);
-    animation: appear var(--dur) var(--ease);
+    animation: rise var(--dur) var(--ease); /* новая мысль поднимается из поля ввода */
 }
 
 /* ---- колода ---- */
