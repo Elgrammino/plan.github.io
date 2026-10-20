@@ -1,6 +1,6 @@
 // Привычки: ежедневные, по дням недели или N раз в неделю. Серии и процент выполнения.
 // В Напоминания не уходят (решение из журнала) — отмечаются полоской на «Сегодня».
-import { addDays, dayKey } from "./dates.js";
+import { addDays, dayKey, plural } from "./dates.js";
 import { WEEKDAYS, WEEKDAY_SHORT, weekdayCode } from "./repeat.js";
 import { onChange, saveHabits, state } from "./store.js";
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
@@ -129,9 +129,7 @@ function kindText(habit) {
         return "по " + (habit.weekdays || []).map(day => WEEKDAY_SHORT[day]).join(", ");
     }
     if (habit.kind === "weekly") {
-        // 1 раз, 2–4 раза, 5 раз; 12–14 — «раз»
-        const n = habit.perWeek;
-        return `${n} ${n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "раза" : "раз"} в неделю`;
+        return `${habit.perWeek} ${plural(habit.perWeek, "раз", "раза", "раз")} в неделю`;
     }
     return "каждый день";
 }

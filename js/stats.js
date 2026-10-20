@@ -1,13 +1,10 @@
 // Статистика: сделанное по дням, время фокуса, серия дней, привычки.
-import { addDays, dayKey, durationText } from "./dates.js";
+import { addDays, dayKey, durationText, plural } from "./dates.js";
 import { rate, streak } from "./habits.js";
 import { doneByDay, state } from "./store.js";
 import { esc, openSheet } from "./ui.js";
 
 const DAYS = 14;
-
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
 function doneCounts(now) {
     const counts = new Map(doneByDay(60, now).map(group => [group.day, group.tasks.length]));

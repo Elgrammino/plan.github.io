@@ -1,7 +1,7 @@
 // Интерфейс напоминаний: блок в «Ещё», сверка по возвращении из Быстрых команд,
 // «Вставить из буфера» (Siri, сверка, ответ Claude), инструкция по сборке команд.
 import { getMeta, setMeta } from "./db.js";
-import { relativeDay, timeText, toIso } from "./dates.js";
+import { plural, relativeDay, timeText, toIso } from "./dates.js";
 import { handleText, refresh as refreshMore } from "./more.js";
 import { parseQuick } from "./parse.js";
 import {
@@ -11,8 +11,6 @@ import {
 import { newTask, saveTask, state } from "./store.js";
 import { esc, haptic, openSheet, showToast } from "./ui.js";
 
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 const remindersWord = n => `${n} ${plural(n, "напоминание", "напоминания", "напоминаний")}`;
 const when = iso => iso ? `${relativeDay(iso)} в ${timeText(iso)}` : "ещё не было";
 

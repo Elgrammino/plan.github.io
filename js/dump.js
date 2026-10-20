@@ -1,6 +1,6 @@
 // Выгрузка из головы: таймер и одно поле для мыслей, потом колода карточек.
 // Черновик живёт в базе (state.dump), поэтому закрытое приложение ничего не теряет.
-import { durationText, hasTime, relativeDay, timeText } from "./dates.js";
+import { durationText, hasTime, plural, relativeDay, timeText } from "./dates.js";
 import { editTask } from "./sheets.js";
 import { sortThought, splitThoughts } from "./sort.js";
 import { discardTask, finishDump, listName, newTask, saveDump, saveSettings, saveTask, state } from "./store.js";
@@ -69,9 +69,6 @@ function unmount() {
     root = null;
     document.body.style.overflow = "";
 }
-
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
 // ---- 1. старт ----
 function startScreen() {

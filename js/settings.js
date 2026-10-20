@@ -1,6 +1,6 @@
 // Настройки во вкладке «Ещё»: день и ритуалы, перенос, списки, шаблоны чек-листов, корзина.
 // И журнал сделанного по дням.
-import { addDays, dayKey, durationText, parseDate, relativeDay, timeText } from "./dates.js";
+import { addDays, dayKey, durationText, parseDate, plural, relativeDay, timeText } from "./dates.js";
 import { parseLine } from "./chains.js";
 import { openOnboarding, resetHints } from "./onboarding.js";
 import { startTutorial } from "./tutorial.js";
@@ -13,9 +13,6 @@ import {
 import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const DUMP_LENGTHS = [5, 10, 15, 25];
-
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
 // ---- строки в «Ещё» ----
 export function settingsRows() {

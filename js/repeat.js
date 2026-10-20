@@ -1,6 +1,6 @@
 // Повторы: { unit: "day" | "week" | "month", every: 1, weekdays: ["mo", "th"], monthDay: 1 }.
 // Схема та же, что в docs/claude-format.md. Здесь только даты, без задач и базы.
-import { addDays, dayKey } from "./dates.js";
+import { addDays, dayKey, plural } from "./dates.js";
 
 export const WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"];
 export const WEEKDAY_SHORT = { mo: "пн", tu: "вт", we: "ср", th: "чт", fr: "пт", sa: "сб", su: "вс" };
@@ -73,9 +73,6 @@ export function nextAfterDone(repeat, planned, now = new Date()) {
 export function daysBetween(a, b) {
     return Math.round((startOfDay(b) - startOfDay(a)) / DAY_MS);
 }
-
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
 // «каждый день», «каждые 3 дня», «по пн, чт», «по будням», «1-го числа»
 export function repeatText(repeat) {

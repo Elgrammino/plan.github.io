@@ -1,5 +1,5 @@
 // Шторки: быстрое добавление, редактирование задачи, перенос.
-import { addDays, dayKey, dayOf, durationText, hasTime, relativeDay, timeText, toIso } from "./dates.js";
+import { addDays, dayKey, dayOf, durationText, hasTime, plural, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
 import { newTask, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
@@ -240,7 +240,6 @@ export function editTask(task, draft = null) {
     });
 
     // повтор: подробности видны, только когда он выбран
-    const plural = (n, forms) => forms[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2];
     const UNIT_FORMS = { day: ["день", "дня", "дней"], week: ["неделю", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] };
     const syncRepeat = () => {
         const repeat = readRepeat();
@@ -249,7 +248,7 @@ export function editTask(task, draft = null) {
             return;
         }
         $("#weekdays").hidden = repeat.unit !== "week";
-        $("#everyUnit").textContent = plural(repeat.every || 1, UNIT_FORMS[repeat.unit]);
+        $("#everyUnit").textContent = plural(repeat.every || 1, ...UNIT_FORMS[repeat.unit]);
         $("#repeatText").textContent = repeatText(repeat);
     };
     sheet.querySelectorAll('input[name="repeatUnit"]').forEach(input => input.addEventListener("change", () => {

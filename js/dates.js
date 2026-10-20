@@ -51,6 +51,10 @@ export function timeText(value) {
     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// склонение по числу: plural(5, "задача", "задачи", "задач") → «задач»
+export const plural = (n, one, few, many) =>
+    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
+
 export function durationText(minutes) {
     if (!minutes) {
         return "";

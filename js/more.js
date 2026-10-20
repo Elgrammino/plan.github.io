@@ -1,6 +1,6 @@
 // Вкладка «Ещё»: обмен с Claude, пакеты, бэкап.
 import { getMeta, setMeta } from "./db.js";
-import { dayKey, hasTime, relativeDay, timeText, toIso } from "./dates.js";
+import { dayKey, hasTime, plural, relativeDay, timeText, toIso } from "./dates.js";
 import {
     applyPlan, batches, exportForClaude, lastImport, makeBackup, prepareBackup, preparePackage,
     readPackage, rollbackImport, saveFile, shiftBatch, trashBatch
@@ -19,8 +19,6 @@ const SHIFTS = [-7, -1, 1, 7];
 let formatDoc = null;
 fetch("./docs/claude-format.md").then(response => response.ok ? response.text() : null).then(text => formatDoc = text).catch(() => { });
 
-const plural = (n, one, few, many) =>
-    n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 const tasksWord = n => `${n} ${plural(n, "задача", "задачи", "задач")}`;
 
 function whenText(value) {
