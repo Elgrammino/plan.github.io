@@ -183,7 +183,7 @@ function findList(state, lists) {
     return list;
 }
 
-export function parseQuick(input, { lists = [], now = new Date() } = {}) {
+export function parseQuick(input, { lists = [], now = new Date(), fallbackDay = null } = {}) {
     const state = { text: " " + input.trim() + " " };
     const result = {};
 
@@ -204,6 +204,10 @@ export function parseQuick(input, { lists = [], now = new Date() } = {}) {
         }
     }
 
+    // день по умолчанию (выбранный в календаре), если во фразе своего нет
+    if (!day && fallbackDay) {
+        day = fallbackDay;
+    }
     if (time) {
         if (!day) {
             // время без дня: сегодня, а если уже прошло — завтра

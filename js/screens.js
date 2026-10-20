@@ -2,7 +2,7 @@
 import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listName, overdueTasks, state } from "./store.js";
 import { todayButton } from "./notify.js";
-import { departure, showDayStrip } from "./show.js";
+import { actions as showActions, departure, showDayStrip } from "./show.js";
 import { focusChip } from "./focus.js";
 import { tutorialChip } from "./tutorial.js";
 import { habitsStrip } from "./habits.js";
@@ -88,17 +88,65 @@ function minutesBetween(a, b) {
 }
 
 // «Дальше / Сейчас»: одно дело крупно, шаги, отсчёт и «Приступить» — 40 минут фокуса, потом перерыв
-function focusCard({ task, running }, now) {
-    const minutes = running ? minutesBetween(now, endOf(task)) : minutesBetween(now, parseDate(task.plannedAt));
+// что показать крупно: незакрытая подготовка к сегодняшнему выступлению (сборы с шагами, шаг цепочки),
+// даже если её время уже прошло; иначе — как раньше, текущее или следующее дело
+function cardTask(now) {
+    const show = todayShow(now);
+    if (show) {
+        const start = parseDate(show.plannedAt);
+        const prep = dayTasks(dayKey(now)).timed
+            .filter(task => !task.done && task.id !== show.id && parseDate(task.plannedAt) < start
+                && (task.chainOf === show.id || task.checklist.some(step => !step.done)))
+            .sort((a, b) => a.plannedAt.localeCompare(b.plannedAt))[0];
+        if (prep) {
+            return { task: prep, running: parseDate(prep.plannedAt) <= now, prepFor: show };
+        }
+    }
+    return currentTask(now);
+}
+
+// сегодняшнее несделанное выступление со временем
+function todayShow(now) {
+    return dayTasks(dayKey(now)).timed.find(task => task.kind === "show" && !task.done) || null;
+}
+
+function focusCard({ task, running, prepFor }, now) {
+    const show = task.kind === "show" ? task : prepFor;
+    const leave = show && departure(show);
+    // в день выступления отсчёт — до выезда: это настоящий дедлайн
+    const toLeave = leave && leave > now ? minutesBetween(now, leave) : null;
+    const minutes = toLeave ?? (running ? minutesBetween(now, endOf(task)) : minutesBetween(now, parseDate(task.plannedAt)));
+    const countLabel = toLeave !== null ? "до выезда" : running ? "осталось" : "до начала";
     const steps = task.checklist.filter(step => !step.done).slice(0, 6);
     const working = state.focus && state.focus.taskId === task.id;
+    const label = task.kind === "show"
+        ? `Выступление, в ${timeText(task.plannedAt)}${leave ? ", выезд в " + timeText(toIso(leave)) : ""}`
+        : prepFor && parseDate(task.plannedAt) < now
+            ? `Не сделано, было в ${timeText(task.plannedAt)} · выезд в ${timeText(toIso(leave))}`
+            : running ? "Сейчас" : "Дальше, в " + timeText(task.plannedAt);
+    // на само выступление фокус не запускаем: вместо «Приступить» — позвонить и маршрут
+    if (task.kind === "show") {
+        return `
+        <section class="focus-card show" data-id="${task.id}">
+            <div class="label" style="margin: 0">${label}</div>
+            <button class="focus-card-title" data-action="edit">${escTitle(task.title)}</button>
+            <div class="meta">${esc([task.show?.client, task.show?.address].filter(Boolean).join(" · "))}</div>
+            ${steps.length ? `<div class="focus-card-steps">${steps.map(step => `<span>${esc(step.text)}</span>`).join("")}</div>` : ""}
+            <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${countLabel}</small></div>
+            <div class="btns show-actions">${showActions(task.show)}</div>
+            <div class="btns">
+                <button class="btn ghost" data-action="toggle">Отыграл</button>
+                <button class="btn ghost" data-action="postpone">Перенести</button>
+            </div>
+        </section>`;
+    }
     return `
         <section class="focus-card" data-id="${task.id}">
-            <div class="label" style="margin: 0">${running ? "Сейчас" : "Дальше, в " + timeText(task.plannedAt)}</div>
+            <div class="label" style="margin: 0">${label}</div>
             <button class="focus-card-title" data-action="edit">${escTitle(task.title)}</button>
             <div class="meta">${sub(task)}</div>
             ${steps.length ? `<div class="focus-card-steps">${steps.map(step => `<span>${esc(step.text)}</span>`).join("")}</div>` : ""}
-            <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${running ? "осталось" : "до начала"}</small></div>
+            <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${countLabel}</small></div>
             ${working
                 ? `<button class="btn primary wide" data-focus-open>Открыть таймер</button>`
                 : `<button class="btn primary wide" data-action="start">Приступить · <span class="mono">${state.settings.focusMin || 40}</span>&nbsp;мин</button>`}
@@ -140,11 +188,14 @@ export function renderToday(el, viewDay) {
         html += `<div class="today-tools">${tutorialChip()}${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
             + habitsStrip(now) + morningEntry(now) + eveningEntry(now);
         // раскладка «Фокус» (выбрана на стенде 20.10): одно дело крупно, остальное — полосами и свёрнутым днём
-        const current = currentTask(now);
+        const current = cardTask(now);
         if (current) {
             html += focusCard(current, now);
         }
-        html += showDayStrip(now);
+        // выступление уже в карточке «Дальше» — полосу не дублируем
+        if (current?.task.kind !== "show") {
+            html += showDayStrip(now);
+        }
 
         const late = overdueTasks(now).filter(task => !(task.plannedAt && task.plannedAt.startsWith(key)));
         if (late.length) {
@@ -178,8 +229,10 @@ export function renderToday(el, viewDay) {
                 nowShown = true;
             }
             const gapFrom = prevEnd && (isToday && prevEnd < now ? now : prevEnd);
-            if (gapFrom && minutesBetween(gapFrom, start) >= 15) {
-                html += `<div class="gap mono">свободно ${durationText(minutesBetween(gapFrom, start))}</div>`;
+            // до выступления свободно только до выезда
+            const gapTo = task.kind === "show" && departure(task) ? departure(task) : start;
+            if (gapFrom && minutesBetween(gapFrom, gapTo) >= 15) {
+                html += `<div class="gap mono">свободно ${durationText(minutesBetween(gapFrom, gapTo))}</div>`;
             }
             html += row(task, { time: timeText(task.plannedAt) });
             const end = endOf(task);

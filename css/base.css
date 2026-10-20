@@ -496,3 +496,11 @@ button {
         transition-property: opacity, color, background-color, border-color !important; /* сдвиги — мгновенно */
     }
 }
+
+/* порядок слоёв: блоки календаря (z 1–2) под панелью, шторками и окнами */
+.tabbar { z-index: 10; }
+.fab { z-index: 11; }
+.backdrop { z-index: 20; }
+.sheet { z-index: 21; }
+.dump { z-index: 30; }
+.toast { z-index: 40; }

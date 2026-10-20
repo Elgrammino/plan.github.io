@@ -3,7 +3,7 @@
 import { addDays, dayKey, dayOf, durationText, hasTime, parseDate, timeText } from "./dates.js";
 import { nextDate, repeatText } from "./repeat.js";
 import { row } from "./screens.js";
-import { editTask } from "./sheets.js";
+import { editTask, quickAdd } from "./sheets.js";
 import { newTask, state } from "./store.js";
 import { esc, escTitle, ICONS } from "./ui.js";
 
@@ -282,5 +282,5 @@ export function onCalendarClick(event, rerender) {
 
 // «+» на вкладке: новая задача на выбранный день
 export function addOnSelected() {
-    editTask(newTask({ plannedAt: selected }));
+    quickAdd({ day: selected }); // тот же быстрый ввод, что на «Сегодня»: фраза разбирается
 }

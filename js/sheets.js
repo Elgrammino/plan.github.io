@@ -1,5 +1,5 @@
 // Шторки: быстрое добавление, редактирование задачи, перенос.
-import { addDays, dayKey, dayOf, durationText, hasTime, plural, relativeDay, timeText, toIso } from "./dates.js";
+import { addDays, dayKey, dayOf, durationText, hasTime, parseDate, plural, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
 import { newTask, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
@@ -64,7 +64,7 @@ function describe(fields) {
 }
 
 // ---- быстрое добавление ----
-export function quickAdd() {
+export function quickAdd({ day = null } = {}) {
     const { sheet, close } = openSheet(`
         <div class="sheet-body">
             <h2>Новая задача</h2>
@@ -83,7 +83,7 @@ export function quickAdd() {
     const added = sheet.querySelector("#quickAdded");
     input.focus();
 
-    const parse = () => parseQuick(input.value, { lists: state.lists });
+    const parse = () => parseQuick(input.value, { lists: state.lists, fallbackDay: day ? parseDate(day) : null });
     input.addEventListener("input", () => {
         const fields = parse();
         preview.innerHTML = input.value.trim() ? `<b>${esc(fields.title || "…")}</b> · ${describe(fields)}` : "";

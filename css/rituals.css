@@ -87,7 +87,8 @@
     text-decoration: none;
 }
 
-.show-actions svg {
+.show-actions svg,
+.show-strip-actions svg {
     width: 18px;
     height: 18px;
     stroke: currentColor;
