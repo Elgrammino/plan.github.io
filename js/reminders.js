@@ -64,31 +64,9 @@ export function reminderItems(now = new Date()) {
             });
         });
     });
-    return [...items, ...ritualItems(now, until)].sort((a, b) => a.due.localeCompare(b.due));
-}
-
-// ритуалы из настроек: утро и вечер каждый день, бэкап по воскресеньям вечером
-function ritualItems(now, until) {
-    const { morning, evening, dumpMin } = state.settings;
-    const items = [];
-    for (let day = new Date(now); day <= until; day = addDays(day, 1)) {
-        const key = dayKey(day);
-        const rituals = [
-            ["morning", morning, "Утро: посмотри план на день"],
-            ["evening", evening, `Вечер: ${dumpMin} минут выгрузить из головы`]
-        ];
-        if (day.getDay() === 0) {
-            rituals.push(["backup", evening, "Бэкап плана: Ещё → Сохранить бэкап"]);
-        }
-        rituals.forEach(([name, time, title]) => {
-            const at = atTime(day, ...time.split(":").map(Number));
-            if (at > now && at <= until) {
-                const mark = `plan:ritual-${name}@${key}:1`;
-                items.push({ key: mark, list: "", title, due: toIso(name === "backup" ? new Date(at.getTime() + 5 * 60000) : at), notes: mark });
-            }
-        });
-    }
-    return items;
+    // ритуалы (утро, вечер, бэкап) сюда не идут: это повторяющиеся напоминания в списке «Ритуалы»,
+    // их создают один раз руками (мастер команд, раздел 4), чтобы не забивать список «План»
+    return items.sort((a, b) => a.due.localeCompare(b.due));
 }
 
 // ---- что изменилось с последней отправки ----
