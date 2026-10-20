@@ -269,6 +269,30 @@
     color: #7db6ff;
 }
 
+/* жёлтое — то, что вставляется в команду; касание копирует (notify.js) */
+.guide-step code,
+.guide > p code {
+    display: inline-block;
+    padding: 1px 7px;
+    margin: 1px 0;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+    cursor: copy;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.guide-step code:active {
+    transform: scale(.96);
+}
+
+.guide-step code.copied {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
 .guide-step input:checked + .g-body,
 .guide-step input:checked + .g-body b,
 .guide-step input:checked + .g-body .g-block,
