@@ -128,7 +128,7 @@ function writeScreen() {
         const n = dump.thoughts.length;
         $("#count").textContent = n ? `${n} ${plural(n, "мысль", "мысли", "мыслей")}` : "";
         $("#list").innerHTML = dump.thoughts.slice().reverse()
-            .map(thought => `<button class="dump-thought" data-thought="${thought.id}">${esc(thought.text)}</button>`).join("");
+            .map(thought => `<button class="dump-thought" data-thought="${esc(thought.id)}">${esc(thought.text)}</button>`).join("");
     };
 
     const update = () => {

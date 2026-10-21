@@ -303,9 +303,19 @@ export async function applyPlan(plan) {
             });
             await setMeta("settings", state.settings);
         }
+        // только то, что бэкап сам сохраняет (makeBackup → extra): списки с безопасными id и журналы.
+        // Остальные ключи (settings, dump, focus…) из файла не принимаем — они обходили бы проверки выше.
+        const EXTRA = { templates: "list", chains: "list", goals: "list", habits: "list", habitLog: "map", focusLog: "array" };
         for (const [key, value] of Object.entries(plan.backup.extra || {})) {
-            state[key] = value;
-            await setMeta(key, value);
+            const shape = EXTRA[key];
+            const ok = shape === "list" ? Array.isArray(value) && value.every(item => item && SAFE_ID.test(item.id))
+                : shape === "array" ? Array.isArray(value)
+                : shape === "map" ? value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).every(id => SAFE_ID.test(id))
+                : false;
+            if (ok) {
+                state[key] = value;
+                await setMeta(key, value);
+            }
         }
         return;
     }

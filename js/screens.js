@@ -151,7 +151,7 @@ function focusCard({ task, running, prepFor }, now) {
             <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${countLabel}</small></div>
             ${working
                 ? `<button class="btn primary wide" data-focus-open>Открыть таймер</button>`
-                : `<button class="btn primary wide" data-action="start">Приступить · ${state.settings.focusMin || 40}&nbsp;мин</button>`}
+                : `<button class="btn primary wide" data-action="start">Приступить · ${Number(state.settings.focusMin) || 40}&nbsp;мин</button>`}
             <div class="btns">
                 <button class="btn ghost" data-action="toggle">Готово</button>
                 <button class="btn ghost" data-action="postpone">Перенести</button>
