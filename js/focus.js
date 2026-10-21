@@ -3,6 +3,7 @@
 // Звонок: пока План на экране — звук и вибрация здесь; заблокирован телефон — таймер «Часов»
 // через Быструю команду «План: таймер» (включается в мастере команд, раздел 6).
 import { dayKey, durationText } from "./dates.js";
+import { guideSheet } from "./notify.js";
 import { runShortcut, SHORTCUT_TIMER } from "./reminders.js";
 import { currentTask, saveFocus, setDone, state } from "./store.js";
 import { esc, escTitle, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
@@ -151,6 +152,8 @@ function render() {
             <div class="focus-clock mono" id="focusClock"></div>
             <div class="bar"><i id="focusBar"></i></div>
             <div class="focus-note" id="focusNote"></div>
+            ${state.settings.timerAlarm ? "" : `<div class="card notice focus-alarm">Чтобы звонило и на заблокированном телефоне, План запускает таймер «Часов». Для этого один раз собери команду из одного действия.
+                <button class="chip-btn" data-focus="alarm">Собрать команду</button></div>`}
             ${task.checklist.length ? `<div class="focus-steps">${task.checklist.map(step => `<div class="${step.done ? "done" : ""}">${esc(step.text)}</div>`).join("")}</div>` : ""}`;
         actions = over ? `
             <button class="btn primary wide" data-focus="break">Перерыв ${breakMin()}&nbsp;минут</button>
@@ -252,6 +255,13 @@ function onClick(event) {
     haptic();
     unlockAudio();
     const task = state.tasks.get(focus.taskId);
+    if (action === "alarm") {
+        // мастер — шторка, а она ниже полноэкранного фокуса: фокус сворачиваем, таймер идёт дальше
+        close();
+        saveFocus();
+        guideSheet("timer");
+        return;
+    }
     if (action === "hide") {
         close();
         saveFocus(); // перерисовать «Сегодня» с чипом

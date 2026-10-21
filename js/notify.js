@@ -364,8 +364,8 @@ const guideParts = () => [
             { set: `Новая команда: «+» → «Переименовать» → <code>${SHORTCUT_SIRI}</code>. Это же название слушает Siri.` },
             { find: "продиктовать", name: "Продиктовать текст", block: "Продиктовать текст" },
             { find: "скопировать", name: "Скопировать в буфер обмена", block: "Скопировать [Продиктованный текст] в буфер обмена" },
-            { find: "уведомление", name: "Показать уведомление", block: "Показать уведомление [Записал. Открой План — он предложит вставить]", set: "Текст: <code>Записал. Открой План — он предложит вставить</code>." },
-            { set: `Проверь: «Привет, Siri, ${SHORTCUT_SIRI.toLowerCase()}» → «завтра в 10 позвонить в банк» → открой План → «Вставить» в подсказке внизу.` }
+            { find: "уведомление", name: "Показать уведомление", block: "Показать уведомление [Записал. В Плане: «+» → «Вставить из буфера»]", set: "Текст: <code>Записал. В Плане: «+» → «Вставить из буфера»</code>." },
+            { set: `Проверь: «Привет, Siri, ${SHORTCUT_SIRI.toLowerCase()}» → «завтра в 10 позвонить в банк» → открой План → «+» → «Вставить из буфера».` }
         ]
     },
     {
@@ -454,7 +454,7 @@ export async function guideSheet(open = null) {
             // открыт первый незаконченный раздел
             const firstOpen = GUIDE.find(item => item.steps.some((_, i) => !checks[`${item.id}-${i}`]));
             return `
-                <details ${part === firstOpen ? "open" : ""} class="${complete ? "complete" : ""}">
+                <details id="part-${part.id}" ${part === firstOpen && !open ? "open" : ""} class="${complete ? "complete" : ""}">
                     <summary><span>${part.title}</span><span class="mono guide-count">${complete ? ICONS.check : `${done}/${part.steps.length}`}</span></summary>
                     <p class="text-2">${part.intro}</p>
                     ${SHORTCUT_LINKS[part.id] ? `
@@ -526,9 +526,12 @@ export async function guideSheet(open = null) {
         close();
     });
     if (open) {
-        const section = sheet.querySelector("#" + open);
-        section.open = true;
-        requestAnimationFrame(() => section.scrollIntoView());
+        // open — раздел мастера («timer») или «help»
+        const section = sheet.querySelector("#part-" + open) || sheet.querySelector("#" + open);
+        if (section) {
+            section.open = true;
+            requestAnimationFrame(() => section.scrollIntoView());
+        }
     }
     sheet.querySelector("[data-close]").addEventListener("click", close);
 }

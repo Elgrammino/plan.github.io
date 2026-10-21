@@ -3,8 +3,8 @@ import { addDays, dayKey, relativeDay } from "./dates.js";
 import { openDump } from "./dump.js";
 import { openSearch } from "./search.js";
 import { journalSheet } from "./settings.js";
-import { onNotifyClick, pasteFromClipboard, resumeAfterShortcut } from "./notify.js";
-import { loadReminders, shortcutJustRan } from "./reminders.js";
+import { onNotifyClick, resumeAfterShortcut } from "./notify.js";
+import { loadReminders } from "./reminders.js";
 import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboarding.js";
 import { onRitualClick } from "./rituals.js";
 import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
@@ -136,20 +136,14 @@ function render() {
 onChange(render);
 // раз в минуту: двигается линия «сейчас» и блок «Сейчас»
 setInterval(() => activeScreen === "today" && render(), 60000);
-// возвращение в приложение: после сверки — вставить её; после долгой отлучки — предложить буфер (Siri)
-let hiddenAt = 0;
+// возвращение в приложение: после сверки — вставить её. Продиктованное Siri вставляется в «+» → «Вставить из буфера»:
+// плашка «Надиктовал через Siri?» при каждом возвращении мешала
 document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "hidden") {
-        hiddenAt = Date.now();
         return;
     }
     render();
-    if (await resumeAfterShortcut()) {
-        return;
-    }
-    if (hiddenAt && Date.now() - hiddenAt > 20000 && !shortcutJustRan() && navigator.clipboard?.readText) {
-        showToast("Надиктовал через Siri?", "Вставить", pasteFromClipboard, 6000);
-    }
+    await resumeAfterShortcut();
 });
 
 // ---- действия с задачами (делегирование) ----

@@ -584,3 +584,16 @@
 .m-done {
     margin-top: var(--sp-16);
 }
+
+/* фокус без таймера «Часов»: одна строка, как это включить */
+.focus-alarm {
+    margin-top: var(--sp-16);
+    font-size: var(--fs-14);
+    color: var(--text-2);
+}
+
+.focus-alarm .chip-btn {
+    display: flex;
+    width: fit-content;
+    margin: var(--sp-8) auto 0;
+}
