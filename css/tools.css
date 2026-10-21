@@ -365,19 +365,83 @@
     line-height: 1.3;
 }
 
-/* ---- обучение: тренер над кнопкой «+» ---- */
+/* ---- обучение: плашка-тренер и подсветка цели ----
+   Плашка стоит под строкой состояния и уезжает вниз через transform (y считает tutorial.js):
+   цель внизу — плашка наверху, и наоборот. Переезд плавный, без пересчёта раскладки. */
 .coach {
     position: fixed;
+    z-index: 25; /* над шторкой и подсветкой, под полноэкранными окнами и тостом */
+    top: calc(var(--safe-top) + var(--sp-12));
     left: calc(var(--safe-left) + var(--sp-12));
     right: calc(var(--safe-right) + var(--sp-12));
-    bottom: calc(var(--safe-bottom) + var(--tabbar-h) + var(--sp-16) + 56px + var(--sp-12));
     max-width: 520px;
     margin: 0 auto;
     padding: var(--sp-12) var(--sp-16) var(--sp-16);
     border-radius: var(--r-16);
     background: color-mix(in srgb, var(--accent) 10%, var(--bg));
     border: 1.5px solid var(--accent-line);
-    animation: slide-up var(--dur) var(--ease);
+    transition: transform 420ms var(--ease-drawer), opacity var(--dur) var(--ease);
+}
+
+.coach.coach-enter {
+    animation: fade-in var(--dur) var(--ease);
+}
+
+/* открыто окно без цели — плашка не мешает */
+.coach.away {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* в шторке — одна строка над ней */
+.coach.compact {
+    padding: var(--sp-8) var(--sp-4) var(--sp-8) var(--sp-16);
+}
+
+.coach-compact {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
+}
+
+.coach-say {
+    flex: 1;
+    font-size: var(--fs-14);
+    line-height: 1.35;
+}
+
+/* подсветка: вокруг цели всё темнеет, сама цель — в рамке; касания проходят насквозь */
+.coach-spot {
+    position: fixed;
+    z-index: 24;
+    left: 0;
+    top: 0;
+    border-radius: var(--r-12);
+    box-shadow: 0 0 0 200vmax color-mix(in srgb, color-mix(in srgb, var(--bg) 60%, black) 62%, transparent);
+    pointer-events: none;
+    transition: transform 360ms var(--ease-drawer), width 360ms var(--ease-drawer), height 360ms var(--ease-drawer);
+}
+
+.coach-spot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--accent);
+    animation: coach-pulse 1.6s var(--ease) infinite;
+}
+
+.coach-spot.soft {
+    box-shadow: 0 0 0 200vmax color-mix(in srgb, color-mix(in srgb, var(--bg) 60%, black) 25%, transparent);
+}
+
+.coach-spot[hidden] {
+    display: none;
+}
+
+.coach-btns .btn.quiet {
+    background: none;
+    color: var(--text-2);
 }
 
 .coach-head {
@@ -450,6 +514,14 @@
 
 @keyframes coach-pulse {
     50% { outline-offset: 8px; outline-color: transparent; }
+}
+
+.coach-spot::after {
+    animation-name: coach-ring;
+}
+
+@keyframes coach-ring {
+    50% { inset: -5px; opacity: .35; }
 }
 
 .tutorial-chip {
