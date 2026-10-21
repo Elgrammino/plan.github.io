@@ -9,7 +9,7 @@ import {
     pendingChanges, readSync, reminderItems, runShortcut, sendToReminders
 } from "./reminders.js";
 import { newTask, saveSettings, saveTask, state } from "./store.js";
-import { ICONS, esc, haptic, openSheet, showToast } from "./ui.js";
+import { ICONS, askToast, esc, haptic, openSheet, showToast } from "./ui.js";
 
 const remindersWord = n => `${n} ${plural(n, "напоминание", "напоминания", "напоминаний")}`;
 const when = iso => iso ? `${relativeDay(iso)} в ${timeText(iso)}` : "ещё не было";
@@ -42,6 +42,7 @@ export async function remindersCard() {
             <button class="btn ghost wide" data-notify="send">Только отправить${changes ? ` · ${changes}` : ""}</button>
             <button class="btn ${ok ? "ghost" : "primary"} wide" data-notify="guide">Как собрать Быстрые команды</button>
             <button class="btn ghost wide" data-notify="test">Тест: напоминание через 2&nbsp;минуты</button>
+            <button class="btn ghost wide" data-notify="clear">Очистить напоминания</button>
         </div>`;
 }
 
@@ -74,12 +75,13 @@ export function onNotifyClick(event) {
             test();
             break;
         case "testYes":
-            state.remindersOk = true;
-            setMeta("remindersOk", true).then(refreshMore);
-            showToast("Отлично: напоминания приходят");
+            testWorked();
             break;
         case "testNo":
             guideSheet("help");
+            break;
+        case "clear":
+            clearReminders();
             break;
     }
     return true;
@@ -89,13 +91,60 @@ export function send(items = reminderItems()) {
     sendToReminders(items).catch(() => showToast("Не получилось положить в буфер. Попробуй ещё раз."));
 }
 
+function testWorked() {
+    state.remindersOk = true;
+    setMeta("remindersOk", true).then(refreshMore);
+    showToast("Отлично: напоминания приходят");
+}
+
+// время теста прошло, а ответа нет — спрашиваем на любом экране, а не только в «Ещё»:
+// после отправки обучение идёт дальше, шаг засчитается по «Да»
+let askedFor = null;
+export async function askTestResult() {
+    const at = state.testReminderAt;
+    if (!at || state.remindersOk === true || askedFor === at || Date.now() < new Date(at).getTime() + 15000
+        || document.querySelector(".sheet, .dump")) {
+        return;
+    }
+    askedFor = at;
+    askToast("Пришло напоминание «Проверка Плана»?", [
+        ["Нет", () => guideSheet("help")],
+        ["Да", testWorked, true]
+    ]);
+}
+setInterval(askTestResult, 15000);
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && setTimeout(askTestResult, 1500));
+
+// пустой список: команда «План: отправить» удаляет все открытые напоминания плана и не ставит новых
+function clearReminders() {
+    const { sheet, close } = openSheet(`
+        <div class="sheet-body">
+            <h2>Очистить напоминания</h2>
+            <p class="text-2">Если в Напоминаниях что-то не так: команда удалит все невыполненные напоминания Плана. Задачи в Плане останутся.</p>
+            <div class="actions">
+                <button class="btn primary wide" data-clear="resend">Очистить и отправить заново</button>
+                <button class="btn ghost wide" data-clear="only">Только очистить</button>
+            </div>
+        </div>
+        <div class="sheet-foot"><button class="btn ghost grow" data-close>Отмена</button></div>`);
+    sheet.querySelector("[data-close]").addEventListener("click", close);
+    sheet.querySelectorAll("[data-clear]").forEach(button => button.addEventListener("click", () => {
+        haptic();
+        close();
+        // «заново» — та же отправка: команда сначала удаляет старые напоминания плана, потом ставит текущие
+        send(button.dataset.clear === "resend" ? reminderItems() : []);
+    }));
+}
+
 export async function test() {
     const at = new Date(Date.now() + 2 * 60000);
     // тест едет вместе с настоящими напоминаниями: команда заменяет все напоминания плана
     send([...reminderItems(), { key: "plan:test:1", title: "Проверка Плана", due: toIso(at), notes: "plan:test:1" }]);
     state.remindersOk = false;
     await setMeta("remindersOk", false);
-    await setMeta("testReminderAt", toIso(at));
+    state.testReminderAt = toIso(at);
+    askedFor = null;
+    await setMeta("testReminderAt", state.testReminderAt);
     // по возвращении видно, совпало ли время: в Напоминаниях должно стоять ровно оно
     showToast(`«Проверка Плана» должна прийти в ${timeText(toIso(at))}`);
 }

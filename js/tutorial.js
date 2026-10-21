@@ -5,6 +5,7 @@ import { getMeta, setMeta } from "./db.js";
 import { addDays, dayKey, durationText, hasTime } from "./dates.js";
 import { weekGoals } from "./goals.js";
 import { guideSheet, send } from "./notify.js";
+import { lastSentAt } from "./reminders.js";
 import { hideAllHints } from "./onboarding.js";
 import { evening, morning } from "./rituals.js";
 import { dayTasks, inboxTasks, onChange, state } from "./store.js";
@@ -115,9 +116,10 @@ const STEPS = [
     },
     {
         id: "reminders", part: "Помощники", title: "Напоминания",
-        text: "Чтобы телефон звонил вовремя, собери Быстрые команды по мастеру и сделай тест. Можно и позже — «Пропустить».",
+        text: "Чтобы телефон звонил вовремя, собери Быстрые команды по мастеру и сделай тест. Отправил — иди дальше: когда тест придёт, План спросит. Можно и позже — «Пропустить».",
         action: ["Открыть мастер", () => guideSheet()],
-        check: () => state.remindersOk === true
+        // засчитываем сразу после отправки: ждать звонка, стоя на шаге, не нужно
+        check: () => state.remindersOk === true || !!state.testReminderAt || !!lastSentAt()
     },
     {
         id: "ritual", part: "Ритм", title: "Ритуал",
@@ -133,6 +135,7 @@ let card = null;
 export async function loadTutorial() {
     progress = (await getMeta("tutorial")) || null;
     state.remindersOk = await getMeta("remindersOk");
+    state.testReminderAt = await getMeta("testReminderAt");
     if (progress && !progress.finished && !progress.hidden) {
         render();
     }
@@ -282,6 +285,8 @@ function check() {
 }
 
 onChange(() => setTimeout(check, 50));
+// вернулся из Быстрых команд после отправки — шаг «Напоминания» засчитывается без лишних касаний
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && setTimeout(check, 300));
 
 // шаги «загляни туда»: засчитываются нажатием
 document.addEventListener("click", event => {

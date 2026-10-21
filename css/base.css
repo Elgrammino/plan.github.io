@@ -518,3 +518,17 @@ button {
     font-size: var(--fs-14);
     color: var(--text);
 }
+
+/* вопрос внизу: текст на всю ширину, ответы — строкой под ним */
+.toast.ask {
+    flex-wrap: wrap;
+    padding: var(--sp-12) var(--sp-12) var(--sp-12) var(--sp-16);
+}
+
+.toast.ask span {
+    flex-basis: 100%;
+}
+
+.toast.ask .btn {
+    flex: 1;
+}

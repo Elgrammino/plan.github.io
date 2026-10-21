@@ -284,3 +284,22 @@ export function onLongPress(container, selector, handler, ms = 500) {
     // долгое нажатие на iPhone иначе открывает своё меню
     container.addEventListener("contextmenu", event => event.target.closest(selector) && event.preventDefault());
 }
+
+// вопрос внизу экрана с несколькими ответами: висит, пока не ответят
+export function askToast(text, answers) {
+    document.querySelector(".toast")?.remove();
+    clearTimeout(toastTimer);
+    const toast = document.createElement("div");
+    toast.className = "toast ask";
+    toast.setAttribute("role", "alertdialog");
+    toast.innerHTML = `<span>${esc(text)}</span>` +
+        answers.map(([label, , primary], i) => `<button class="btn ${primary ? "primary" : "ghost"}" data-i="${i}">${esc(label)}</button>`).join("");
+    toast.addEventListener("click", event => {
+        const button = event.target.closest("[data-i]");
+        if (button) {
+            leave(toast);
+            answers[button.dataset.i][1]();
+        }
+    });
+    document.body.append(toast);
+}
