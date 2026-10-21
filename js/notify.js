@@ -394,11 +394,10 @@ const guideParts = () => [
             { set: `Новая команда: «+» → «Переименовать» → <code>${SHORTCUT_TIMER}</code>.` },
             { find: "запустить таймер", name: "Запустить таймер", block: "Запустить таймер на [длительность]",
                 set: "Нажми длительность → в поле числа «Выбрать переменную» → <b>Входные данные команды</b>. Единица — <b>мин</b>.",
-                alt: "Если переменной нет в списке, сначала включи шаг ниже (приём текста), потом вернись сюда." },
-            { set: "Внизу экрана команды нажми <b>ⓘ</b> → включи приём входных данных и выбери тип <b>Текст</b>.",
-                alt: "Пункт может называться «Получать входные данные» или «Показывать в общем доступе». Не нашёл — пришли скриншот этого экрана." },
-            { set: `Проверь: <button class="chip-btn" data-timer-test>Таймер на 1 минуту</button> Откроются Быстрые команды, в «Часах» пойдёт таймер. Вернись в План.` },
-            { set: `Пришёл звонок через минуту? <button class="chip-btn" data-timer-on>${state.settings.timerAlarm ? "Звонок включён" : "Включить звонок"}</button>` }
+                alt: "Сверху команды сам появится блок «Получать … из …» — его не трогай: через него План передаёт минуты." },
+            { set: `Проверь: <button class="chip-btn" data-timer-test>Таймер на 1 минуту</button> Откроются Быстрые команды, в «Часах» пойдёт таймер. Это же нажатие включает звонок: дальше «Приступить» сам запускает таймер «Часов».` },
+            { set: `Таймер «Часов» при «Приступить»: <button class="chip-btn" data-timer-on>${state.settings.timerAlarm ? "включён · выключить" : "выключен · включить"}</button>`,
+                alt: "Не запустился таймер на 1 минуту — проверь название команды: «План: таймер», с двоеточием и пробелом." }
         ]
     }
 ];
@@ -482,13 +481,17 @@ export async function guideSheet(open = null) {
         }
         event.preventDefault();
         haptic();
+        // проба и есть включение: раньше звонок включался отдельной кнопкой в конце, до неё не доходили
+        state.settings.timerAlarm = timer.matches("[data-timer-test]") ? true : !state.settings.timerAlarm;
+        saveSettings();
+        const toggle = sheet.querySelector("[data-timer-on]");
+        if (toggle) {
+            toggle.textContent = state.settings.timerAlarm ? "включён · выключить" : "выключен · включить";
+        }
         if (timer.matches("[data-timer-test]")) {
             runShortcut(SHORTCUT_TIMER, "1");
         } else {
-            state.settings.timerAlarm = true;
-            saveSettings();
-            timer.textContent = "Звонок включён";
-            showToast("Готово: «Приступить» будет звонить таймером «Часов»");
+            showToast(state.settings.timerAlarm ? "«Приступить» будет запускать таймер «Часов»" : "Таймер «Часов» выключен");
         }
     });
 
