@@ -263,9 +263,14 @@ export const ICONS = {
 
 // Долгое нажатие (полсекунды без сдвига) по элементу selector внутри container.
 // Следующий click после него глотаем, чтобы не открылась ещё и карточка.
+// Пока держишь, элемент плавно сжимается (.pressing) — видно, что удержание засчитывается.
 export function onLongPress(container, selector, handler, ms = 500) {
-    let timer = null, x = 0, y = 0, fired = false;
-    const cancel = () => clearTimeout(timer);
+    let timer = null, x = 0, y = 0, fired = false, pressed = null;
+    const cancel = () => {
+        clearTimeout(timer);
+        pressed?.classList.remove("pressing");
+        pressed = null;
+    };
     container.addEventListener("pointerdown", event => {
         const target = event.target.closest(selector);
         cancel();
@@ -275,8 +280,11 @@ export function onLongPress(container, selector, handler, ms = 500) {
         }
         x = event.clientX;
         y = event.clientY;
+        pressed = target;
+        target.classList.add("pressing");
         timer = setTimeout(() => {
             fired = true;
+            cancel();
             haptic();
             handler(target);
         }, ms);

@@ -127,8 +127,20 @@ function onClick(event) {
     const corner = QUADRANTS.find(q => q.id === event.target.closest("[data-quadrant]")?.dataset.quadrant);
     const next = scope && state.tasks.get(root.querySelector(".m-next")?.dataset.id);
     if (!task && corner && next && !event.target.closest(".m-task")) {
+        const card = root.querySelector(".m-next");
+        if (card.classList.contains("flying")) {
+            return;
+        }
         haptic();
-        move(next, corner);
+        // карточка улетает в угол, который коснулись: видно, куда она ушла
+        const from = card.getBoundingClientRect();
+        const to = root.querySelector(`[data-quadrant="${corner.id}"]`).getBoundingClientRect();
+        const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+        const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+        card.classList.add("flying");
+        card.style.transform = `translate(${dx}px, ${dy}px) scale(.4)`;
+        card.style.opacity = "0";
+        setTimeout(() => move(next, corner), 200);
         return;
     }
     if (!task) {

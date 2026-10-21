@@ -124,11 +124,12 @@ function writeScreen() {
     let shownHint = -1;
     let typedAt = 0;
 
-    const renderList = () => {
+    // fresh — сколько мыслей только что добавлено: им — подъём из поля ввода
+    const renderList = (fresh = 0) => {
         const n = dump.thoughts.length;
         $("#count").textContent = n ? `${n} ${plural(n, "мысль", "мысли", "мыслей")}` : "";
         $("#list").innerHTML = dump.thoughts.slice().reverse()
-            .map(thought => `<button class="dump-thought" data-thought="${esc(thought.id)}">${esc(thought.text)}</button>`).join("");
+            .map((thought, i) => `<button class="dump-thought${i < fresh ? " fresh" : ""}" data-thought="${esc(thought.id)}">${esc(thought.text)}</button>`).join("");
     };
 
     const update = () => {
@@ -173,7 +174,7 @@ function writeScreen() {
         haptic();
         parts.forEach(text => dump.thoughts.push({ id: crypto.randomUUID().slice(0, 8), text }));
         saveDump(dump);
-        renderList();
+        renderList(parts.length);
     };
     input.addEventListener("keydown", event => {
         if (event.key === "Enter") {

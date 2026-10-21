@@ -434,3 +434,15 @@
 .block.narrow .block-time {
     display: none;
 }
+
+/* долгое нажатие на публикацию: пока держишь — медленно сжимается, отпустил раньше — быстро обратно */
+.post-card,
+.tile {
+    transition: transform 150ms var(--ease);
+}
+
+.post-card.pressing,
+.tile.pressing {
+    transform: scale(.97);
+    transition: transform 500ms var(--ease);
+}

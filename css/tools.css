@@ -420,6 +420,10 @@
     border-radius: var(--r-12);
     box-shadow: 0 0 0 200vmax color-mix(in srgb, color-mix(in srgb, var(--bg) 60%, black) 62%, transparent);
     pointer-events: none;
+}
+
+/* перелёт — только к новой цели; при прокрутке рамка стоит на месте мгновенно, без «резинки» */
+.coach-spot.moving {
     transition: transform 360ms var(--ease-drawer), width 360ms var(--ease-drawer), height 360ms var(--ease-drawer);
 }
 
@@ -429,7 +433,7 @@
     inset: 0;
     border-radius: inherit;
     border: 2px solid var(--accent);
-    animation: coach-pulse 1.6s var(--ease) infinite;
+    animation: coach-ring 1.6s var(--ease) infinite; /* transform и прозрачность: без пересчёта раскладки каждый кадр */
 }
 
 .coach-spot.soft {
@@ -505,24 +509,8 @@
     color: var(--accent);
 }
 
-/* «Показать»: что нажать */
-.coach-target {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-    border-radius: var(--r-12);
-    animation: coach-pulse 1s var(--ease) 3;
-}
-
-@keyframes coach-pulse {
-    50% { outline-offset: 8px; outline-color: transparent; }
-}
-
-.coach-spot::after {
-    animation-name: coach-ring;
-}
-
 @keyframes coach-ring {
-    50% { inset: -5px; opacity: .35; }
+    50% { transform: scale(1.04); opacity: .35; }
 }
 
 .tutorial-chip {
@@ -597,4 +585,11 @@
     display: flex;
     width: fit-content;
     margin: var(--sp-8) auto 0;
+}
+
+/* касание угла: карточка улетает туда, 200 мс; при «Уменьшении движения» только гаснет */
+.m-next.flying {
+    animation: none;
+    pointer-events: none;
+    transition: transform 200ms var(--ease), opacity 200ms var(--ease);
 }

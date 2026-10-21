@@ -138,7 +138,11 @@
 
 .dump-list > :first-child {
     color: var(--text);
-    animation: rise var(--dur) var(--ease); /* новая мысль поднимается из поля ввода */
+}
+
+/* поднимается только что добавленная мысль, а не первая строка при каждой перерисовке */
+.dump-list > .fresh {
+    animation: rise var(--dur) var(--ease);
 }
 
 /* ---- колода ---- */

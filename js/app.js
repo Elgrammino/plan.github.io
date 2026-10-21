@@ -213,15 +213,24 @@ document.querySelector(".app").addEventListener("click", event => {
             postponeTask(task);
             break;
         case "today":
-        case "tomorrow":
+        case "tomorrow": {
+            if (holder.classList.contains("leaving")) {
+                break; // второе касание, пока строка уходит
+            }
             haptic();
-            task.plannedAt = dayKey(addDays(new Date(), button.dataset.action === "tomorrow" ? 1 : 0));
-            saveTask(task);
-            showToast(button.dataset.action === "tomorrow" ? "На завтра" : "На сегодня", "Отменить", () => {
-                task.plannedAt = null;
+            const tomorrow = button.dataset.action === "tomorrow";
+            // строка мягко растворяется, как при «сделано», и только потом уходит из списка
+            holder.classList.add("leaving");
+            setTimeout(() => {
+                task.plannedAt = dayKey(addDays(new Date(), tomorrow ? 1 : 0));
                 saveTask(task);
-            });
+                showToast(tomorrow ? "На завтра" : "На сегодня", "Отменить", () => {
+                    task.plannedAt = null;
+                    saveTask(task);
+                });
+            }, 300);
             break;
+        }
     }
 });
 

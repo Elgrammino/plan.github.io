@@ -328,12 +328,23 @@ function render() {
 }
 
 // подсветка — на цель, плашка — на другую половину экрана, чтобы не закрывать то, что нажимать
+let spotTarget = null;
+let spotTimer = 0;
+
 function place(found, mode) {
     if (!found || mode === "away") {
         spot.hidden = true;
+        spotTarget = null;
     } else {
         const rect = found.element.getBoundingClientRect();
         const pad = 6;
+        // перелёт только к новой цели (и не из скрытого состояния); прокрутка и подстройка — мгновенно
+        if (found.element !== spotTarget) {
+            spot.classList.toggle("moving", !spot.hidden && !!spotTarget);
+            clearTimeout(spotTimer);
+            spotTimer = setTimeout(() => spot.classList.remove("moving"), 380);
+            spotTarget = found.element;
+        }
         spot.hidden = false;
         // в шторке рядом с целью есть и «Добавить», и «Закрыть» — их не гасим, только приглушаем
         spot.classList.toggle("soft", mode === "compact");
