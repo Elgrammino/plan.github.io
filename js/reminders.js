@@ -96,8 +96,17 @@ export function pendingChanges(now = new Date()) {
 }
 
 // вызывать прямо из нажатия: iOS пускает в буфер и в Быстрые команды только по жесту
+// в команду время уходит как на часах телефона, «21.10.2026 19:00», без часового пояса:
+// «Получить даты из входных данных» читает строку ISO с поправкой по-своему и сдвигает время
+const pad = n => String(n).padStart(2, "0");
+export function wireTime(iso) {
+    const at = parseDate(iso);
+    return `${pad(at.getDate())}.${pad(at.getMonth() + 1)}.${at.getFullYear()} ${pad(at.getHours())}:${pad(at.getMinutes())}`;
+}
+
 export async function sendToReminders(items) {
-    await navigator.clipboard.writeText(JSON.stringify({ app: "plan", reminders: items }));
+    const wire = items.map(item => ({ ...item, due: wireTime(item.due) }));
+    await navigator.clipboard.writeText(JSON.stringify({ app: "plan", reminders: wire }));
     runShortcut(SHORTCUT_SEND);
     sentState = { at: toIso(new Date()), items: Object.fromEntries(items.map(item => [item.key, fingerprint(item)])) };
     await setMeta("remindersSent", sentState);

@@ -2,7 +2,7 @@
 import { addDays, dayKey, dayOf, durationText, hasTime, parseDate, plural, relativeDay, timeText, toIso } from "./dates.js";
 import { parseQuick } from "./parse.js";
 import { WEEKDAYS, WEEKDAY_SHORT, firstDate, repeatText, weekdayCode } from "./repeat.js";
-import { newTask, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
+import { newTask, nextSlot, postponeOptions, postponed, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
 import { editTemplate } from "./settings.js";
 import { startFocus } from "./focus.js";
 import { applyChain, chainTasks, planChain } from "./chains.js";
@@ -43,7 +43,11 @@ function autoGrow(textarea) {
 
 function describe(fields) {
     const parts = [];
-    if (fields.plannedAt) {
+    const ranged = hasTime(fields.plannedAt) && fields.durationMin;
+    if (ranged) {
+        const end = toIso(new Date(parseDate(fields.plannedAt).getTime() + fields.durationMin * 60000));
+        parts.push(`${relativeDay(fields.plannedAt)} ${timeText(fields.plannedAt)}–${timeText(end)}`);
+    } else if (fields.plannedAt) {
         parts.push(relativeDay(fields.plannedAt) + (hasTime(fields.plannedAt) ? " в " + timeText(fields.plannedAt) : ""));
     } else {
         parts.push("во Входящие");
@@ -83,7 +87,15 @@ export function quickAdd({ day = null } = {}) {
     const added = sheet.querySelector("#quickAdded");
     input.focus();
 
-    const parse = () => parseQuick(input.value, { lists: state.lists, fallbackDay: day ? parseDate(day) : null });
+    const parse = () => {
+        const fields = parseQuick(input.value, { lists: state.lists, fallbackDay: day ? parseDate(day) : null });
+        // с длительностью, но без времени — следом за последней задачей дня
+        const slot = fields.durationMin && fields.plannedAt && !hasTime(fields.plannedAt) && !fields.repeat && nextSlot(fields.plannedAt);
+        if (slot) {
+            fields.plannedAt = toIso(slot);
+        }
+        return fields;
+    };
     input.addEventListener("input", () => {
         const fields = parse();
         preview.innerHTML = input.value.trim() ? `<b>${esc(fields.title || "…")}</b> · ${describe(fields)}` : "";
@@ -141,7 +153,9 @@ export function editTask(task, draft = null) {
                 <div class="row" style="margin-top: var(--sp-8)">
                     <input class="input" type="date" id="day" value="${plannedDay}" aria-label="День">
                     <input class="input" type="time" id="time" value="${plannedTime}" aria-label="Время">
+                    <button class="icon-btn" id="timeClear" aria-label="Без времени" ${plannedTime ? "" : "hidden"}>${ICONS.close}</button>
                 </div>
+                <div class="preview" id="slotHint" hidden></div>
             </div>
 
             <div class="field"><div class="label">Повтор</div>
@@ -237,7 +251,45 @@ export function editTask(task, draft = null) {
             $("#day").value = today;
             syncWhen();
         }
+        syncSlot();
     });
+    $("#time").addEventListener("blur", () => syncSlot());
+
+    // время подряд: без своего времени задача с длительностью встаёт после последней задачи дня.
+    // Пустое поле iOS заполняет текущим временем от одного касания — подставляем свободное заранее.
+    let touched = !state.tasks.has(task.id);
+    const autoSlot = () => {
+        const day = $("#day").value;
+        return touched && day && !$("#time").value && +sheet.querySelector('input[name="duration"]:checked')?.value
+            ? nextSlot(day, task.id) : null;
+    };
+    const syncSlot = () => {
+        const slot = autoSlot();
+        $("#slotHint").hidden = !slot;
+        $("#slotHint").textContent = slot ? `Без времени встанет на ${timeText(toIso(slot))} — следом за прошлой задачей дня` : "";
+        $("#timeClear").hidden = !$("#time").value;
+    };
+    $("#time").addEventListener("focus", () => {
+        if (!$("#time").value) {
+            const slot = nextSlot($("#day").value || today, task.id);
+            $("#time").value = slot ? timeText(toIso(slot)) : state.settings.dayStart;
+        }
+    });
+    $("#timeClear").addEventListener("click", () => {
+        haptic();
+        $("#time").value = "";
+        touched = true;
+        syncSlot();
+    });
+    sheet.querySelectorAll('input[name="when"], input[name="duration"]').forEach(input => input.addEventListener("change", () => {
+        touched = true;
+        syncSlot();
+    }));
+    $("#day").addEventListener("change", () => {
+        touched = true;
+        syncSlot();
+    });
+    syncSlot();
 
     // повтор: подробности видны, только когда он выбран
     const UNIT_FORMS = { day: ["день", "дня", "дней"], week: ["неделю", "недели", "недель"], month: ["месяц", "месяца", "месяцев"] };
@@ -423,7 +475,8 @@ export function editTask(task, draft = null) {
         const repeat = readRepeat();
         // повтор без даты: первый подходящий день
         const day = $("#day").value || (repeat ? dayKey(firstDate(repeat)) : "");
-        const time = $("#time").value;
+        const slot = autoSlot();
+        const time = $("#time").value || (slot ? timeText(toIso(slot)) : "");
         const checked = name => sheet.querySelector(`input[name="${name}"]:checked`)?.value || null;
         const pending = $("#newStep").value.trim();
         return {

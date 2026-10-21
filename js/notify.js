@@ -96,6 +96,8 @@ export async function test() {
     state.remindersOk = false;
     await setMeta("remindersOk", false);
     await setMeta("testReminderAt", toIso(at));
+    // по возвращении видно, совпало ли время: в Напоминаниях должно стоять ровно оно
+    showToast(`«Проверка Плана» должна прийти в ${timeText(toIso(at))}`);
 }
 
 // ---- сверка: команда кладёт ответ в буфер, ты возвращаешься и вставляешь ----

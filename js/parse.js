@@ -161,6 +161,31 @@ function findTime(state) {
     return time;
 }
 
+// «с 14 до 16», «с 10:30 до 12», «14:00-16:00», «в 14–16» → время начала и длительность
+function findRange(state) {
+    let range = null;
+    const T = "(\\d{1,2})(?:[:.](\\d{2}))?";
+    const take = m => {
+        let [h1, m1, h2, m2, part] = [+m[1], +(m[2] || 0), +m[3], +(m[4] || 0), m[5]];
+        if ((part === "вечера" || part === "дня") && h2 < 12) {
+            h2 += 12;
+            if (h1 + 12 < h2) {
+                h1 += 12;
+            }
+        }
+        const minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+        if (h1 > 23 || h2 > 24 || m1 > 59 || m2 > 59 || minutes <= 0) {
+            return false;
+        }
+        range = { time: [h1, m1], minutes };
+    };
+    const PART = "(?:\\s+(утра|дня|вечера|ночи))?";
+    cut(state, new RegExp(B + "с\\s+" + T + "\\s+до\\s+" + T + PART + E, "i"), take)
+        || cut(state, new RegExp(B + "(?:с\\s+|в\\s+)?(\\d{1,2}):(\\d{2})\\s*[-–—]\\s*(\\d{1,2}):(\\d{2})" + PART + E, "i"), take)
+        || cut(state, new RegExp(B + "(?:с|в)\\s+(\\d{1,2})()\\s*[-–—]\\s*(\\d{1,2})()" + PART + E, "i"), take);
+    return range;
+}
+
 function findDuration(state) {
     let minutes = null;
     cut(state, new RegExp(B + "полчаса" + E, "i"), () => minutes = 30)
@@ -192,8 +217,9 @@ export function parseQuick(input, { lists = [], now = new Date(), fallbackDay = 
     }
     result.list = findList(state, lists);
     result.repeat = findRepeat(state);
-    result.durationMin = findDuration(state);
-    const time = findTime(state);
+    const range = findRange(state);
+    result.durationMin = range?.minutes || findDuration(state);
+    const time = range?.time || findTime(state);
     let day = findDay(state, now);
 
     if (result.repeat && !day) {

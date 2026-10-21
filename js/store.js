@@ -31,7 +31,10 @@ function defaultSettings() {
         postpone: ["15m", "1h", "evening", "tomorrow", "weekend"],
         postponeEvening: "19:00",  // «Вечером»
         postponeMorning: "09:00",  // «Завтра утром», «Послезавтра»
-        postponeWeekend: "10:00"   // «В выходные»
+        postponeWeekend: "10:00",  // «В выходные»
+        dayStart: "09:00",         // первая задача дня без времени встаёт сюда; сетка «День» в Календаре…
+        dayEnd: "20:00",           // …идёт до сюда
+        gapMin: 5                  // отдых между задачами, поставленными подряд
     };
 }
 
@@ -138,6 +141,31 @@ export function finishDump() {
 }
 
 // ---- задачи ----
+// задача с длительностью, но без времени встаёт следом за последней задачей дня:
+// конец предыдущей (начало + длительность, без длительности — 30 мин) + отдых.
+// Первая задача дня — на начало дня; сегодня — не раньше, чем сейчас.
+export function nextSlot(day, exceptId = null, now = new Date()) {
+    const [h, m] = state.settings.dayStart.split(":").map(Number);
+    let at = new Date(`${day}T00:00`);
+    at.setHours(h, m, 0, 0);
+    state.tasks.forEach(task => {
+        if (task.id === exceptId || task.deletedAt || !hasTime(task.plannedAt) || dayOf(task.plannedAt) !== day) {
+            return;
+        }
+        const end = parseDate(task.plannedAt).getTime() + ((task.durationMin || 30) + state.settings.gapMin) * 60000;
+        if (end > at) {
+            at = new Date(end);
+        }
+    });
+    if (day === dayKey(now) && at < now) {
+        at = new Date(now);
+    }
+    // ровные пять минут: 9:43 → 9:45
+    at.setSeconds(0, 0);
+    at.setMinutes(Math.ceil(at.getMinutes() / 5) * 5);
+    return dayKey(at) === day ? at : null; // за полночь не переносим
+}
+
 export function newTask(fields = {}) {
     const now = toIso(new Date());
     return {
