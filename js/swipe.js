@@ -1,7 +1,9 @@
 // Свайп по строке задачи: вправо — готово, влево — перенести.
 // Строка двигается только по горизонтали, вертикальную прокрутку отдаём браузеру (touch-action: pan-y).
+// Решаем по углу: почти горизонтально — свайп, всё остальное — прокрутка.
 const LIMIT = 72;  // столько пикселей нужно протянуть, чтобы сработало
-const START = 10;  // до этого сдвига не решаем, свайп это или прокрутка
+const START = 12;  // до этого сдвига не решаем, свайп это или прокрутка
+const SLOPE = 1.7; // свайп — только почти по горизонтали: dx больше dy в 1,7 раза (угол до ~30°)
 const FLICK = 0.11; // px/мс: быстрый короткий взмах тоже засчитывается…
 const FLICK_MIN = 24; // …если строку сдвинули хотя бы на столько
 
@@ -43,11 +45,11 @@ export function swipeRows(container, { onRight, onLeft }) {
         const dx = event.clientX - startX;
         const dy = event.clientY - startY;
         if (!active) {
-            if (Math.abs(dy) > START && Math.abs(dy) > Math.abs(dx)) {
-                row = null; // это прокрутка
+            if (Math.hypot(dx, dy) < START) {
                 return;
             }
-            if (Math.abs(dx) < START) {
+            if (Math.abs(dx) < Math.abs(dy) * SLOPE) {
+                row = null; // косое и вертикальное — прокрутка
                 return;
             }
             active = true;
@@ -88,6 +90,25 @@ export function swipeRows(container, { onRight, onLeft }) {
             onLeft(target);
         }
     });
+
+    // пока строка едет, страницу не прокручиваем: иначе палец чуть ушёл вниз —
+    // iOS забирает жест себе (pointercancel), и строка дёргается назад
+    // Ещё до решения: первое же почти горизонтальное движение придерживаем, чтобы iOS не начал прокрутку.
+    let touchX = 0, touchY = 0;
+    container.addEventListener("touchstart", event => {
+        touchX = event.touches[0].clientX;
+        touchY = event.touches[0].clientY;
+    }, { passive: true });
+    container.addEventListener("touchmove", event => {
+        if (!row || event.touches.length !== 1) {
+            return;
+        }
+        const dx = Math.abs(event.touches[0].clientX - touchX);
+        const dy = Math.abs(event.touches[0].clientY - touchY);
+        if (active || (dx > 2 && dx > dy * SLOPE)) {
+            event.cancelable && event.preventDefault();
+        }
+    }, { passive: false });
 
     container.addEventListener("pointercancel", () => {
         if (row) {

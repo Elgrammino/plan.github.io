@@ -411,11 +411,16 @@ button {
 }
 
 /* ручка шторки: на iOS так понятно, что это шторка; за полосу с ней шторку смахивают вниз */
+/* зона касания 44 px, а видимая ручка — прежняя: лишняя высота уходит под верхний отступ содержимого */
 .sheet-grip {
     flex: none;
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    padding: var(--sp-8) 0 var(--sp-4);
+    height: 44px;
+    margin-bottom: -27px;
+    padding-top: var(--sp-8);
     touch-action: none;
     cursor: grab;
 }

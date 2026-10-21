@@ -90,6 +90,16 @@ export function leave(element, ms = 170) {
 
 const FLICK = 0.11; // px/мс: быстрее — считаем смахиванием, даже если протянули немного
 
+// ближайший предок внутри шторки, который прокручивается по вертикали
+function scrollerOf(element, root) {
+    for (let node = element; node && node !== root; node = node.parentElement) {
+        if (node.scrollHeight > node.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(node).overflowY)) {
+            return node;
+        }
+    }
+    return null;
+}
+
 export function openSheet(html, { onClose } = {}) {
     const backdrop = document.createElement("div");
     backdrop.className = "backdrop";
@@ -123,34 +133,24 @@ export function openSheet(html, { onClose } = {}) {
     };
     backdrop.addEventListener("click", () => close());
 
-    // тянуть вниз за полосу с ручкой: идёт за пальцем; ниже трети или быстрый взмах — закрыть
-    const grip = sheet.querySelector(".sheet-grip");
-    let startY = 0, startT = 0, dy = 0, pointer = null;
-    grip.addEventListener("pointerdown", event => {
-        pointer = event.pointerId;
-        startY = event.clientY;
-        startT = event.timeStamp;
+    // шторка идёт за пальцем вниз; ниже трети или быстрый взмах — закрыть
+    let startY = 0, startT = 0, dy = 0;
+    const begin = (y, time) => {
+        startY = y;
+        startT = time;
         dy = 0;
-        grip.setPointerCapture(pointer);
         sheet.classList.remove("settle");
         sheet.classList.add("dragging");
-    });
-    grip.addEventListener("pointermove", event => {
-        if (event.pointerId !== pointer) {
-            return;
-        }
-        const raw = event.clientY - startY;
+    };
+    const move = y => {
+        const raw = y - startY;
         dy = raw > 0 ? raw : -Math.sqrt(-raw) * 2; // вверх — с сопротивлением
         sheet.style.transform = `translateY(${dy}px)`;
         backdrop.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / sheet.offsetHeight));
-    });
-    const release = event => {
-        if (event.pointerId !== pointer) {
-            return;
-        }
-        pointer = null;
+    };
+    const finish = time => {
         sheet.classList.remove("dragging");
-        const speed = dy / Math.max(1, event.timeStamp - startT);
+        const speed = dy / Math.max(1, time - startT);
         if (dy > sheet.offsetHeight / 3 || (speed > FLICK && dy > 12)) {
             close("dismiss");
         } else {
@@ -159,8 +159,81 @@ export function openSheet(html, { onClose } = {}) {
             backdrop.style.opacity = "";
         }
     };
+
+    // мышь и стилус — за ручку
+    const grip = sheet.querySelector(".sheet-grip");
+    let pointer = null;
+    grip.addEventListener("pointerdown", event => {
+        if (event.pointerType === "touch") {
+            return; // палец ведут касания ниже
+        }
+        pointer = event.pointerId;
+        grip.setPointerCapture(pointer);
+        begin(event.clientY, event.timeStamp);
+    });
+    grip.addEventListener("pointermove", event => event.pointerId === pointer && move(event.clientY));
+    const release = event => {
+        if (event.pointerId === pointer) {
+            pointer = null;
+            finish(event.timeStamp);
+        }
+    };
     grip.addEventListener("pointerup", release);
     grip.addEventListener("pointercancel", release);
+
+    // палец — за любое место шторки, как в iOS: вниз тянется вся шторка, если её содержимое
+    // уже наверху; иначе — обычная прокрутка. Касания, а не pointer: иначе iOS забирает жест себе.
+    // Вне прокрутки страницу не отдаём вовсе — она пружинила под шторкой.
+    let touch = null;
+    sheet.addEventListener("touchstart", event => {
+        if (event.touches.length !== 1) {
+            touch = null;
+            return;
+        }
+        // в поле, где сейчас печатают, палец выделяет текст — шторку не тянем
+        if ((event.target.matches("input, textarea") && event.target === document.activeElement) || event.target.closest(".grip")) {
+            touch = null;
+            return;
+        }
+        const { clientX, clientY } = event.touches[0];
+        touch = { x: clientX, y: clientY, time: event.timeStamp, scroller: scrollerOf(event.target, sheet), drag: false };
+    }, { passive: true });
+    sheet.addEventListener("touchmove", event => {
+        if (!touch || event.touches.length !== 1) {
+            return;
+        }
+        const { clientX, clientY } = event.touches[0];
+        if (!touch.drag) {
+            const dx = clientX - touch.x;
+            const down = clientY - touch.y;
+            if (Math.abs(down) < 6 && Math.abs(dx) < 6) {
+                return;
+            }
+            const scroller = touch.scroller;
+            const vertical = Math.abs(down) > Math.abs(dx);
+            if (vertical && down > 0 && (!scroller || scroller.scrollTop <= 0)) {
+                touch.drag = true;
+                begin(clientY, touch.time);
+            } else if (scroller || !vertical) {
+                touch = null; // прокрутка содержимого или ряда чипов вбок
+                return;
+            } else {
+                event.preventDefault();
+                return;
+            }
+        }
+        event.preventDefault();
+        move(clientY);
+    }, { passive: false });
+    const endTouch = event => {
+        if (touch?.drag) {
+            finish(event.timeStamp);
+        }
+        touch = null;
+    };
+    sheet.addEventListener("touchend", endTouch);
+    sheet.addEventListener("touchcancel", endTouch);
+    backdrop.addEventListener("touchmove", event => event.preventDefault(), { passive: false });
     return { sheet, close: () => close() };
 }
 

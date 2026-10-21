@@ -311,6 +311,17 @@
     animation: slide-up var(--dur) var(--ease);
 }
 
+/* фон шторки продолжается за нижний край: рывок вверх не открывает под ней страницу */
+.sheet::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 50vh;
+    background: var(--raised);
+}
+
 @keyframes slide-up {
     from { transform: translateY(40px); opacity: 0; }
 }

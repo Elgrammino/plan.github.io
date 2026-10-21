@@ -230,6 +230,10 @@ document.querySelector(".app").addEventListener("click", event => {
     }
 });
 
+// масштаб двумя пальцами: iOS не слушает user-scalable=no в viewport, жест гасим сами
+["gesturestart", "gesturechange"].forEach(type => document.addEventListener(type, event => event.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", event => event.touches.length > 1 && event.preventDefault(), { passive: false });
+
 swipeRows(document.querySelector(".app"), {
     onRight: row => toggle(state.tasks.get(row.dataset.id), row),
     onLeft: row => postponeTask(state.tasks.get(row.dataset.id))
