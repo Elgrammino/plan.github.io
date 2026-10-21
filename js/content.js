@@ -3,8 +3,8 @@
 import { monthGrid, monthRange, occurrences } from "./calendar.js";
 import { dayKey, dayOf, hasTime, parseDate, relativeDay, timeText } from "./dates.js";
 import { editTask } from "./sheets.js";
-import { newTask, saveTask, setDone, state } from "./store.js";
-import { esc, escTitle, haptic, showToast } from "./ui.js";
+import { newTask, restoreTask, saveTask, setDone, state, trashTask } from "./store.js";
+import { esc, escTitle, haptic, onLongPress, openSheet, showToast } from "./ui.js";
 
 const STAGES = ["идея", "сценарий", "снято", "смонтировано", "вышло"];
 const FORMATS = [["reels", "Рилс"], ["post", "Пост"], ["stories", "Сторис"]];
@@ -124,6 +124,36 @@ export function onContentClick(event, rerender) {
     }
     rerender();
     return true;
+}
+
+// долгое нажатие на публикацию: «Изменить» или «Удалить» — создал не ту, убери в корзину
+export function bindPostMenu(container) {
+    onLongPress(container, "#content .post-card[data-id], #content .tile[data-id]", target => {
+        const task = state.tasks.get(target.dataset.id);
+        if (!task) {
+            return;
+        }
+        const { sheet, close } = openSheet(`
+            <div class="sheet-body">
+                <h2>${escTitle(task.title)}</h2>
+                <div class="actions">
+                    <button class="btn ghost wide" data-menu="edit">Изменить</button>
+                    <button class="btn ghost wide" data-menu="delete">Удалить в корзину</button>
+                </div>
+            </div>
+            <div class="sheet-foot"><button class="btn ghost grow" data-close>Отмена</button></div>`);
+        sheet.querySelector("[data-close]").addEventListener("click", close);
+        sheet.querySelector('[data-menu="edit"]').addEventListener("click", () => {
+            close();
+            editTask(task);
+        });
+        sheet.querySelector('[data-menu="delete"]').addEventListener("click", () => {
+            haptic();
+            close();
+            trashTask(task);
+            showToast(`«${task.title}» в корзине`, "Вернуть", () => restoreTask(task));
+        });
+    });
 }
 
 // «+» на вкладке: новая идея; в календаре — на выбранный день

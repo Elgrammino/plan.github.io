@@ -269,6 +269,7 @@ export function editTemplate(template, onDone = () => { }, prefill = null) {
             <input class="input" id="tplName" placeholder="Название, например «Сборы: корпоратив»" value="${esc(start?.name || "")}" autocomplete="off">
             <div class="field"><div class="label">Шаги, по&nbsp;одному в&nbsp;строке</div>
                 <textarea class="textarea" id="tplSteps" rows="8" placeholder="Костюм&#10;Реквизит&#10;Колонка заряжена">${esc(start?.steps.join("\n") || "")}</textarea>
+                <div class="field-error" id="tplError" role="alert" hidden>Добавь хотя бы один шаг</div>
             </div>
         </div>
         <div class="sheet-foot">
@@ -282,12 +283,15 @@ export function editTemplate(template, onDone = () => { }, prefill = null) {
     }
     sheet.querySelector("[data-close]").addEventListener("click", close);
     $("#tplSave").addEventListener("click", () => {
-        const name = $("#tplName").value.trim();
         const steps = $("#tplSteps").value.split("\n").map(step => step.trim()).filter(Boolean);
-        if (!name || !steps.length) {
-            showToast(name ? "Добавь хотя бы один шаг" : "Дай шаблону название");
+        // ошибка — у поля: тост прятался под клавиатурой, и казалось, что кнопка не работает
+        $("#tplError").hidden = !!steps.length;
+        if (!steps.length) {
+            $("#tplSteps").focus();
             return;
         }
+        // без названия — по первому шагу
+        const name = $("#tplName").value.trim() || steps[0];
         haptic();
         if (template) {
             Object.assign(template, { name, steps });

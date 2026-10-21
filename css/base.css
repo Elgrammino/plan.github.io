@@ -509,3 +509,12 @@ button {
 .sheet { z-index: 21; }
 .dump { z-index: 30; }
 .toast { z-index: 40; }
+
+/* ошибка заполнения — прямо под полем, а не тостом: тост прячется под клавиатурой */
+.field-error {
+    margin-top: var(--sp-8);
+    padding-left: var(--sp-12);
+    border-left: 2px solid var(--alert);
+    font-size: var(--fs-14);
+    color: var(--text);
+}

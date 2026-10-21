@@ -377,7 +377,8 @@ export function editTask(task, draft = null) {
         renderSteps();
     });
     $("#saveTemplate").addEventListener("click", () => {
-        const texts = steps.map(step => step.text.trim()).filter(Boolean);
+        // шаг, набранный без Enter, тоже идёт в шаблон
+        const texts = [...steps.map(step => step.text), $("#newStep").value].map(text => text.trim()).filter(Boolean);
         if (!texts.length) {
             showToast("Сначала добавь шаги");
             $("#newStep").focus();

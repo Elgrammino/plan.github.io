@@ -249,3 +249,36 @@ export const ICONS = {
     check: `<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
     trash: `<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>`
 };
+
+// Долгое нажатие (полсекунды без сдвига) по элементу selector внутри container.
+// Следующий click после него глотаем, чтобы не открылась ещё и карточка.
+export function onLongPress(container, selector, handler, ms = 500) {
+    let timer = null, x = 0, y = 0, fired = false;
+    const cancel = () => clearTimeout(timer);
+    container.addEventListener("pointerdown", event => {
+        const target = event.target.closest(selector);
+        cancel();
+        fired = false;
+        if (!target || event.button !== 0) {
+            return;
+        }
+        x = event.clientX;
+        y = event.clientY;
+        timer = setTimeout(() => {
+            fired = true;
+            haptic();
+            handler(target);
+        }, ms);
+    });
+    container.addEventListener("pointermove", event => Math.hypot(event.clientX - x, event.clientY - y) > 8 && cancel());
+    ["pointerup", "pointercancel"].forEach(type => container.addEventListener(type, cancel));
+    container.addEventListener("click", event => {
+        if (fired) {
+            fired = false;
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    }, true);
+    // долгое нажатие на iPhone иначе открывает своё меню
+    container.addEventListener("contextmenu", event => event.target.closest(selector) && event.preventDefault());
+}

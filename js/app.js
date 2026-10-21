@@ -8,7 +8,7 @@ import { loadReminders, shortcutJustRan } from "./reminders.js";
 import { dismissHint, loadHints, maybeStartOnboarding, showHint } from "./onboarding.js";
 import { onRitualClick } from "./rituals.js";
 import { addOnSelected, onCalendarClick, renderCalendar } from "./calendar.js";
-import { newPost, onContentClick, renderContent } from "./content.js";
+import { bindPostMenu, newPost, onContentClick, renderContent } from "./content.js";
 import { openFocus, startFocus, startWork } from "./focus.js";
 import { onHabitClick } from "./habits.js";
 import { loadTutorial, resumeTutorial } from "./tutorial.js";
@@ -233,6 +233,8 @@ document.querySelector(".app").addEventListener("click", event => {
 // масштаб двумя пальцами: iOS не слушает user-scalable=no в viewport, жест гасим сами
 ["gesturestart", "gesturechange"].forEach(type => document.addEventListener(type, event => event.preventDefault(), { passive: false }));
 document.addEventListener("touchmove", event => event.touches.length > 1 && event.preventDefault(), { passive: false });
+
+bindPostMenu(document.querySelector(".app"));
 
 swipeRows(document.querySelector(".app"), {
     onRight: row => toggle(state.tasks.get(row.dataset.id), row),
