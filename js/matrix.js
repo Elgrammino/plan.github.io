@@ -26,15 +26,20 @@ function isUrgent(task, now = new Date()) {
 
 const quadrantOf = task => QUADRANTS.find(q => q.important === (task.priority === "high") && q.urgent === isUrgent(task));
 
-// открытые задачи на ближайшие две недели и Входящие; публикации живут в «Контенте»
+// открытые задачи на ближайшие две недели и Входящие; публикации живут в «Контенте».
+// После выгрузки — только её задачи, на любой срок.
 function tasks(now = new Date()) {
     const until = dayKey(addDays(now, 14));
-    return [...state.tasks.values()].filter(task => !task.done && !task.deletedAt && task.kind !== "post"
-        && (!task.plannedAt || dayOf(task.plannedAt) <= until))
+    return [...state.tasks.values()].filter(task => !task.done && !task.deletedAt
+        && (scope ? scope.ids.has(task.id) : task.kind !== "post" && (!task.plannedAt || dayOf(task.plannedAt) <= until)))
         .sort((a, b) => (a.plannedAt || "9").localeCompare(b.plannedAt || "9"));
 }
 
 function move(task, quadrant) {
+    if (scope && !scope.placed.has(task.id)) {
+        scope.placed.add(task.id);
+        scope.onPlace?.([...scope.placed]);
+    }
     task.priority = quadrant.important ? "high" : "normal";
     task.urgent = quadrant.urgent;
     return saveTask(task);
@@ -42,8 +47,11 @@ function move(task, quadrant) {
 
 let root = null;
 let unsubscribe = () => { };
+// шаг выгрузки: { ids, placed, onDone } — новые задачи по одной раскладываются по углам
+let scope = null;
 
-export function openMatrix() {
+export function openMatrix({ ids = null, placed = [], onPlace = null, onDone = null } = {}) {
+    scope = ids ? { ids: new Set(ids), placed: new Set(placed), onPlace, onDone } : null;
     root = document.createElement("div");
     root.className = "dump matrix-screen";
     root.setAttribute("role", "dialog");
@@ -60,22 +68,37 @@ function close() {
     root.remove();
     root = null;
     unlockScroll();
+    const done = scope?.onDone;
+    scope = null;
+    done?.();
 }
+
+const taskSub = task => esc(task.plannedAt ? relativeDay(task.plannedAt) + (hasTime(task.plannedAt) ? " " + timeText(task.plannedAt) : "") : "без дня")
+    + (task.due ? " · до " + esc(relativeDay(task.due)) : "");
 
 function render() {
     if (!root) {
         return;
     }
     const all = tasks();
+    const waiting = scope ? all.filter(task => !scope.placed.has(task.id)) : [];
+    const next = waiting[0];
     root.innerHTML = `
         <div class="dump-top">
-            <button class="icon-btn" data-close-matrix aria-label="Закрыть">${ICONS.close}</button>
-            <span class="dump-count">Матрица</span>
+            <button class="icon-btn" data-close-matrix aria-label="${scope ? "Пропустить" : "Закрыть"}">${ICONS.close}</button>
+            <span class="dump-count">${scope ? `Важно или нет · <span class="mono">${all.length - waiting.length}</span> из <span class="mono">${all.length}</span>` : "Матрица"}</span>
             <span style="width: var(--tap)"></span>
         </div>
-        <p class="hint">Тяни задачу за&nbsp;ручку в&nbsp;другой квадрат или коснись её. Срочность сама считается по&nbsp;срокам, пока не&nbsp;передвинешь вручную.</p>
+        ${scope ? (next ? `
+            <p class="hint">Покажи Плану, что важно. Тяни карточку в&nbsp;угол или коснись угла.</p>
+            <div class="m-task m-next" data-id="${next.id}" data-grip="${next.id}">
+                <div class="m-body"><span class="m-title">${esc(next.title)}</span><span class="m-sub">${taskSub(next)}</span></div>
+            </div>
+            <p class="m-left">${waiting.length > 1 ? `Ещё ${waiting.length - 1}` : "Последняя"}</p>`
+            : `<p class="hint">Всё разложено. Передумал — перетащи задачу за&nbsp;ручку.</p>`)
+        : `<p class="hint">Тяни задачу за&nbsp;ручку в&nbsp;другой квадрат или коснись её. Срочность сама считается по&nbsp;срокам, пока не&nbsp;передвинешь вручную.</p>`}
         <div class="matrix">${QUADRANTS.map(q => {
-            const list = all.filter(task => quadrantOf(task) === q);
+            const list = all.filter(task => quadrantOf(task) === q && (!scope || scope.placed.has(task.id)));
             return `
                 <section class="quadrant q-${q.id}" data-quadrant="${q.id}">
                     <div class="q-head"><b>${q.title}</b><span class="mono">${list.length}</span></div>
@@ -84,12 +107,13 @@ function render() {
                         <div class="m-task" data-id="${task.id}">
                             <button class="m-body" data-pick-task="${task.id}">
                                 <span class="m-title">${esc(task.title)}</span>
-                                <span class="m-sub">${esc(task.plannedAt ? relativeDay(task.plannedAt) + (hasTime(task.plannedAt) ? " " + timeText(task.plannedAt) : "") : "без дня")}${task.due ? " · до " + esc(relativeDay(task.due)) : ""}</span>
+                                <span class="m-sub">${taskSub(task)}</span>
                             </button>
                             <span class="grip" data-grip="${task.id}" aria-label="Перетащить">${GRIP}</span>
                         </div>`).join("")}
                 </section>`;
-        }).join("")}</div>`;
+        }).join("")}</div>
+        ${scope ? `<button class="btn ${next ? "ghost" : "primary"} wide m-done" data-close-matrix>${next ? "Пропустить" : "Дальше"}</button>` : ""}`;
 }
 
 function onClick(event) {
@@ -99,6 +123,14 @@ function onClick(event) {
     }
     const id = event.target.closest("[data-pick-task]")?.dataset.pickTask;
     const task = id && state.tasks.get(id);
+    // после выгрузки: касание угла отправляет туда текущую карточку
+    const corner = QUADRANTS.find(q => q.id === event.target.closest("[data-quadrant]")?.dataset.quadrant);
+    const next = scope && state.tasks.get(root.querySelector(".m-next")?.dataset.id);
+    if (!task && corner && next && !event.target.closest(".m-task")) {
+        haptic();
+        move(next, corner);
+        return;
+    }
     if (!task) {
         return;
     }
@@ -174,7 +206,7 @@ function onGrip(event) {
         card.classList.remove("m-dragging");
         target?.classList.remove("drop");
         const quadrant = QUADRANTS.find(q => q.id === target?.dataset.quadrant);
-        if (quadrant && quadrant !== quadrantOf(task)) {
+        if (quadrant && (quadrant !== quadrantOf(task) || (scope && !scope.placed.has(task.id)))) {
             haptic();
             move(task, quadrant);
         }

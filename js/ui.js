@@ -54,6 +54,8 @@ if (window.visualViewport) {
     const update = () => {
         const kb = Math.max(0, window.innerHeight - visualViewport.height - visualViewport.offsetTop);
         document.documentElement.style.setProperty("--kb", kb + "px");
+        // насколько iOS сдвинул окно вверх ради поля ввода: полноэкранные окна держатся видимой части
+        document.documentElement.style.setProperty("--vv-top", Math.max(0, visualViewport.offsetTop) + "px");
     };
     visualViewport.addEventListener("resize", update);
     visualViewport.addEventListener("scroll", update);

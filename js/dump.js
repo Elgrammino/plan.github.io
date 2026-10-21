@@ -4,10 +4,12 @@ import { durationText, hasTime, plural, relativeDay, timeText } from "./dates.js
 import { editTask } from "./sheets.js";
 import { sortThought, splitThoughts } from "./sort.js";
 import { discardTask, finishDump, listName, newTask, saveDump, saveSettings, saveTask, state } from "./store.js";
+import { openMatrix } from "./matrix.js";
 import { esc, haptic, ICONS, lockScroll, showToast, unlockScroll } from "./ui.js";
 
 const LENGTHS = [5, 10, 15, 25];
-const HINT_EVERY = 150; // секунд: новая тема раз в 2,5 минуты
+const HINT_EVERY = 120; // секунд: новая тема раз в 2 минуты…
+const HINT_QUIET = 5000; // …но не под пальцами: ждём 5 секунд тишины после набора
 
 const HINTS = [
     "Что крутится в голове прямо сейчас?",
@@ -42,6 +44,8 @@ export function openDump(done, minutes = null) {
         writeScreen();
     } else if (dump.cards.length) {
         sortScreen();
+    } else if (dump.phase === "matrix") {
+        matrixStep();
     } else {
         summaryScreen();
     }
@@ -118,11 +122,13 @@ function writeScreen() {
     const input = $("#thought");
     let hintShift = 0;
     let shownHint = -1;
+    let typedAt = 0;
 
     const renderList = () => {
         const n = dump.thoughts.length;
         $("#count").textContent = n ? `${n} ${plural(n, "мысль", "мысли", "мыслей")}` : "";
-        $("#list").innerHTML = dump.thoughts.slice().reverse().map(thought => `<div>${esc(thought.text)}</div>`).join("");
+        $("#list").innerHTML = dump.thoughts.slice().reverse()
+            .map(thought => `<button class="dump-thought" data-thought="${thought.id}">${esc(thought.text)}</button>`).join("");
     };
 
     const update = () => {
@@ -135,7 +141,7 @@ function writeScreen() {
         $("#progress").style.transform = `scaleX(${Math.min(1, elapsed / total)})`;
         $("#toSort").classList.toggle("ready", over && dump.thoughts.length > 0);
         const index = (Math.floor(elapsed / HINT_EVERY) + hintShift) % HINTS.length;
-        if (index !== shownHint) {
+        if (index !== shownHint && (shownHint === -1 || Date.now() - typedAt > HINT_QUIET)) {
             shownHint = index;
             $("#hint").textContent = HINTS[index];
             $("#hint").classList.remove("fresh");
@@ -176,8 +182,58 @@ function writeScreen() {
         }
     });
     input.addEventListener("input", () => {
+        typedAt = Date.now();
         input.style.height = "auto";
         input.style.height = input.scrollHeight + "px";
+    });
+
+    // опечатка на скорости: коснись мысли — правишь прямо в строке; Enter — сохранить, пустая — удалить
+    $("#list").addEventListener("click", event => {
+        const row = event.target.closest("[data-thought]");
+        const thought = row && dump.thoughts.find(item => item.id === row.dataset.thought);
+        if (!thought) {
+            return;
+        }
+        const edit = document.createElement("textarea");
+        edit.className = "textarea dump-edit";
+        edit.rows = 1;
+        edit.value = thought.text;
+        edit.setAttribute("enterkeyhint", "done");
+        row.replaceWith(edit);
+        edit.focus();
+        edit.setSelectionRange(edit.value.length, edit.value.length);
+        const grow = () => {
+            edit.style.height = "auto";
+            edit.style.height = edit.scrollHeight + "px";
+        };
+        grow();
+        edit.addEventListener("input", () => {
+            typedAt = Date.now();
+            grow();
+        });
+        let saved = false;
+        const save = () => {
+            if (saved) {
+                return;
+            }
+            saved = true;
+            const text = edit.value.trim();
+            if (text) {
+                thought.text = text;
+            } else {
+                dump.thoughts.splice(dump.thoughts.indexOf(thought), 1);
+            }
+            saveDump(dump);
+            renderList();
+        };
+        edit.addEventListener("keydown", keyEvent => {
+            if (keyEvent.key === "Enter") {
+                keyEvent.preventDefault();
+                save();
+                input.focus();
+            }
+        });
+        edit.addEventListener("blur", save);
     });
 
     $("#toSort").addEventListener("click", () => {
@@ -269,7 +325,7 @@ function sortScreen() {
         }
         dump.history.push({ ...card, accepted: dir === "right" });
         saveDump(dump);
-        setTimeout(() => dump.cards.length ? sortScreen() : summaryScreen(), 220);
+        setTimeout(() => dump.cards.length ? sortScreen() : afterDeck(), 220);
     };
 
     root.querySelectorAll("[data-swipe]").forEach(button => button.addEventListener("click", () => decide(button.dataset.swipe)));
@@ -283,6 +339,40 @@ function sortScreen() {
     }));
 
     $("#undo")?.addEventListener("click", undoLast);
+}
+
+// колода разобрана: принятое раскладываем по важности, если там есть что раскладывать
+function afterDeck() {
+    const dump = state.dump;
+    const accepted = dump.history.filter(card => card.accepted && state.tasks.has(card.task.id));
+    if (accepted.length >= 2) {
+        dump.phase = "matrix";
+        saveDump(dump);
+        matrixStep();
+    } else {
+        summaryScreen();
+    }
+}
+
+// шаг «важно или нет»: матрица только с задачами этой выгрузки, поверх экрана выгрузки
+function matrixStep() {
+    const dump = state.dump;
+    const ids = dump.history.filter(card => card.accepted).map(card => card.task.id);
+    summaryScreen();
+    openMatrix({
+        ids,
+        placed: dump.placed || [],
+        onPlace: placed => {
+            dump.placed = placed;
+            saveDump(dump);
+        },
+        onDone: () => {
+            if (state.dump) {
+                dump.phase = "summary";
+                saveDump(dump);
+            }
+        }
+    });
 }
 
 // последняя карточка возвращается в колоду, принятая задача стирается из плана

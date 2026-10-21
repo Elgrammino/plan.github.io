@@ -484,3 +484,31 @@
     color: var(--accent);
     font-weight: 600;
 }
+
+/* ---- матрица после выгрузки: следующая мысль крупно, её тянут в угол ---- */
+.m-next {
+    margin-top: var(--sp-12);
+    padding: var(--sp-8);
+    border: 1.5px solid var(--accent-line);
+    touch-action: none;
+    cursor: grab;
+    animation: rise var(--dur) var(--ease);
+}
+
+.m-next .m-title {
+    font-size: var(--fs-17);
+}
+
+.m-next .m-sub {
+    font-size: var(--fs-12);
+}
+
+.m-left {
+    margin: var(--sp-8) 0 0;
+    font-size: var(--fs-12);
+    color: var(--text-3);
+}
+
+.m-done {
+    margin-top: var(--sp-16);
+}

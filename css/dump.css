@@ -6,9 +6,14 @@
 }
 
 /* ---- экран поверх всего ---- */
+/* Ровно видимая часть окна: с клавиатурой iOS сдвигает окно вверх (--vv-top) и съедает низ (--kb).
+   Без этого шапка уезжала под строку состояния. */
 .dump {
     position: fixed;
-    inset: 0;
+    top: var(--vv-top, 0px);
+    bottom: var(--kb, 0px);
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     max-width: 640px;
@@ -30,10 +35,11 @@
     background: var(--bg);
 }
 
+/* три колонки: счётчик ровно посередине, как бы ни отличались кнопки по краям */
 .dump-top {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: var(--sp-12);
     min-height: var(--tap);
     margin-left: calc(-1 * var(--sp-12));
@@ -42,6 +48,16 @@
 .dump-count {
     font-size: var(--fs-14);
     color: var(--text-2);
+    text-align: center;
+}
+
+.dump-top > :last-child {
+    justify-self: end;
+}
+
+/* одна кнопка «закрыть» — слева, а не справа */
+.dump-top > :first-child {
+    justify-self: start;
 }
 
 .chip-btn.ready {
@@ -98,13 +114,29 @@
     color: var(--text-2);
 }
 
-.dump-list div {
+.dump-list > * {
+    display: block;
+    width: 100%;
     padding: var(--sp-8) 0;
     border-bottom: 1px solid var(--line);
     overflow-wrap: anywhere;
+    text-align: left;
+    font: inherit;
+    color: inherit;
 }
 
-.dump-list div:first-child {
+/* мысль — кнопка: касание открывает правку, выделять её текст не нужно */
+.dump-thought {
+    background: none;
+}
+
+.dump-list .dump-edit {
+    padding: var(--sp-8) var(--sp-12);
+    color: var(--text);
+    resize: none;
+}
+
+.dump-list > :first-child {
     color: var(--text);
     animation: rise var(--dur) var(--ease); /* новая мысль поднимается из поля ввода */
 }
