@@ -180,9 +180,11 @@ function findRange(state) {
         range = { time: [h1, m1], minutes };
     };
     const PART = "(?:\\s+(утра|дня|вечера|ночи))?";
-    cut(state, new RegExp(B + "с\\s+" + T + "\\s+до\\s+" + T + PART + E, "i"), take)
+    // «с 1 до 5 ноября», «в 2-3 дня», «за 2-3 недели» — это дни и сроки, а не часы
+    const NOT_DATE = "(?!\\s+(?:" + MONTHS.join("|") + "|числа|дней|недел|месяц))";
+    cut(state, new RegExp(B + "с\\s+" + T + "\\s+до\\s+" + T + NOT_DATE + PART + E, "i"), take)
         || cut(state, new RegExp(B + "(?:с\\s+|в\\s+)?(\\d{1,2}):(\\d{2})\\s*[-–—]\\s*(\\d{1,2}):(\\d{2})" + PART + E, "i"), take)
-        || cut(state, new RegExp(B + "(?:с|в)\\s+(\\d{1,2})()\\s*[-–—]\\s*(\\d{1,2})()" + PART + E, "i"), take);
+        || cut(state, new RegExp(B + "(?:с|в)\\s+(\\d{1,2})()\\s*[-–—]\\s*(\\d{1,2})()" + NOT_DATE + "(?!\\s+дня)" + PART + E, "i"), take);
     return range;
 }
 

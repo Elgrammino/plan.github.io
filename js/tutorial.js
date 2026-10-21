@@ -364,7 +364,7 @@ const schedule = () => {
         });
     }
 };
-setInterval(() => active() && (check(), schedule()), 200);
+setInterval(() => active() && (check(), schedule()), 400);
 window.addEventListener("scroll", schedule, { capture: true, passive: true });
 window.addEventListener("resize", schedule);
 

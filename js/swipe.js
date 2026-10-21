@@ -105,7 +105,8 @@ export function swipeRows(container, { onRight, onLeft }) {
         }
         const dx = Math.abs(event.touches[0].clientX - touchX);
         const dy = Math.abs(event.touches[0].clientY - touchY);
-        if (active || (dx > 2 && dx > dy * SLOPE)) {
+        // до решения придерживаем только явно боковое движение: от дрожи пальца прокрутка не должна пропадать
+        if (active || (dx > 5 && dx > dy * SLOPE * 1.5)) {
             event.cancelable && event.preventDefault();
         }
     }, { passive: false });

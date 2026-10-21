@@ -265,7 +265,8 @@ export function editTask(task, draft = null) {
     let touched = !state.tasks.has(task.id);
     const autoSlot = () => {
         const day = $("#day").value;
-        return touched && day && !$("#time").value && +sheet.querySelector('input[name="duration"]:checked')?.value
+        // повтор не прибиваем ко времени одного дня — как и в быстром вводе
+        return touched && day && !$("#time").value && !readRepeat() && +sheet.querySelector('input[name="duration"]:checked')?.value
             ? nextSlot(day, task.id) : null;
     };
     const syncSlot = () => {
@@ -278,6 +279,8 @@ export function editTask(task, draft = null) {
         if (!$("#time").value) {
             const slot = nextSlot($("#day").value || today, task.id);
             $("#time").value = slot ? timeText(toIso(slot)) : state.settings.dayStart;
+            // как настоящий выбор: без дня ставится сегодня, крестик рядом убирает время
+            $("#time").dispatchEvent(new Event("change"));
         }
     });
     $("#timeClear").addEventListener("click", () => {
@@ -286,7 +289,7 @@ export function editTask(task, draft = null) {
         touched = true;
         syncSlot();
     });
-    sheet.querySelectorAll('input[name="when"], input[name="duration"]').forEach(input => input.addEventListener("change", () => {
+    sheet.querySelectorAll('input[name="when"], input[name="duration"], input[name="repeatUnit"]').forEach(input => input.addEventListener("change", () => {
         touched = true;
         syncSlot();
     }));

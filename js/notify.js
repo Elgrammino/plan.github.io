@@ -101,17 +101,24 @@ function testWorked() {
 
 // время теста прошло, а ответа нет — спрашиваем на любом экране, а не только в «Ещё»:
 // после отправки обучение идёт дальше, шаг засчитается по «Да»
-let askedFor = null;
+// Ответ запоминается в базе: «Нет» не спрашивается заново при каждом запуске. Пока ответа нет, вопрос
+// возвращается, если его вытеснил другой тост, — но чужой тост не перебивает.
+let answeredFor;
 export async function askTestResult() {
+    answeredFor ??= (await getMeta("testAnsweredFor")) || null;
     const at = state.testReminderAt;
-    if (!at || state.remindersOk === true || askedFor === at || Date.now() < new Date(at).getTime() + 15000
-        || document.querySelector(".sheet, .dump")) {
+    if (!at || state.remindersOk === true || answeredFor === at || Date.now() < new Date(at).getTime() + 15000
+        || document.querySelector(".sheet, .dump, .toast")) {
         return;
     }
-    askedFor = at;
+    const answer = then => () => {
+        answeredFor = at;
+        setMeta("testAnsweredFor", at);
+        then();
+    };
     askToast("Пришло напоминание «Проверка Плана»?", [
-        ["Нет", () => guideSheet("help")],
-        ["Да", testWorked, true]
+        ["Нет", answer(() => guideSheet("help"))],
+        ["Да", answer(testWorked), true]
     ]);
 }
 setInterval(askTestResult, 15000);
@@ -145,7 +152,6 @@ export async function test() {
     state.remindersOk = false;
     await setMeta("remindersOk", false);
     state.testReminderAt = toIso(at);
-    askedFor = null;
     await setMeta("testReminderAt", state.testReminderAt);
     // по возвращении видно, совпало ли время: в Напоминаниях должно стоять ровно оно
     showToast(`«Проверка Плана» должна прийти в ${timeText(toIso(at))}`);
