@@ -35,6 +35,9 @@ export function readPackage(text) {
         if (!Array.isArray(data.tasks) || !Array.isArray(data.lists)) {
             throw new Error("Бэкап повреждён: нет задач или списков.");
         }
+        if (![...data.tasks, ...data.lists].every(item => item && SAFE_ID.test(item.id))) {
+            throw new Error("Бэкап повреждён: у задачи или списка странный id.");
+        }
         return { backup: data };
     }
     const version = data?.version ?? 1;
@@ -46,6 +49,10 @@ export function readPackage(text) {
     }
     return { batch: typeof data.batch === "string" && data.batch.trim() ? data.batch.trim() : null, items: data.items };
 }
+
+// id попадает в разметку (data-id="…") и в метки напоминаний: только латиница, цифры, «-» и «_».
+// Иначе файл с id вроде «"><img …>» вставил бы в страницу свой HTML.
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 // ---- поля одной задачи ----
 function readDate(value, name, warn) {
@@ -217,13 +224,17 @@ export function preparePackage(pkg) {
             rows.push({ type: "skip", title: raw?.id ? String(raw.id) : label, reason: "нет названия (title)" });
             return;
         }
-        const id = raw.id != null && String(raw.id).trim() ? String(raw.id).trim() : null;
+        let id = raw.id != null && String(raw.id).trim() ? String(raw.id).trim() : null;
+        const badId = id && !SAFE_ID.test(id);
+        if (badId) {
+            id = null; // задача придёт новой, со своим id
+        }
         if (id && seen.has(id)) {
             rows.push({ type: "skip", title: raw.title, reason: `id «${id}» повторяется в файле` });
             return;
         }
         id && seen.add(id);
-        const warnings = [];
+        const warnings = badId ? ["id из файла не подошёл (только латиница, цифры, - и _) — задача добавится новой"] : [];
         const fields = readFields(raw, ctx, text => warnings.push(text));
         const before = id ? state.tasks.get(id) : null;
 
@@ -281,7 +292,15 @@ export async function applyPlan(plan) {
         await putTasks(plan.backup.tasks.map(task => ({ ...newTask(), ...task })));
         await setLists(plan.backup.lists);
         if (plan.backup.settings) {
-            Object.assign(state.settings, plan.backup.settings);
+            // только знакомые настройки того же типа; время — строго «ЧЧ:ММ» (оно попадает в разметку)
+            Object.entries(plan.backup.settings).forEach(([key, value]) => {
+                const current = state.settings[key];
+                const ok = typeof value === typeof current && (Array.isArray(value) === Array.isArray(current))
+                    && (typeof current !== "string" || !/^\d{2}:\d{2}$/.test(current) || /^\d{2}:\d{2}$/.test(value));
+                if (ok) {
+                    state.settings[key] = value;
+                }
+            });
             await setMeta("settings", state.settings);
         }
         for (const [key, value] of Object.entries(plan.backup.extra || {})) {
