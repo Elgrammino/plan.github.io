@@ -316,9 +316,11 @@
 }
 
 /* ---- календарь: день ---- */
+/* высоту задаёт fitDayGrid(): рабочий день целиком до нижней панели */
 .day-grid {
     position: relative;
-    margin-top: var(--sp-16);
+    height: 440px;
+    margin: var(--sp-16) 0 var(--sp-8);
 }
 
 .day-grid .hour {
@@ -360,6 +362,7 @@
 
 .block {
     position: absolute;
+    min-height: 22px; /* 15 минут на сжатой сетке — всё равно строка текста */
     display: flex;
     flex-direction: column;
     gap: 1px;

@@ -71,8 +71,6 @@ export function monthRange(month) {
 
 // ---- вкладка «Календарь»: день, неделя, месяц ----
 const MODES = [["day", "День"], ["week", "Неделя"], ["month", "Месяц"]];
-const HOUR_PX = 56;     // высота часа в дневной сетке
-const DAY_START = 7;    // сетка дня с 7:00, раньше — если есть задачи раньше
 
 let mode = "week";
 let month = new Date();
@@ -168,19 +166,27 @@ function weekView() {
     return html;
 }
 
-// ---- день: сетка часов, задачи блоками по времени и длительности ----
+// ---- день: рабочие часы (9:00–20:00 из настроек) на всю высоту экрана, задачи — блоками по времени и длине ----
+// Положение в процентах от сетки, высоту сетки подгоняет fitDayGrid() под экран. Что раньше или позже — строками.
+const minutesOf = time => time.split(":").reduce((h, m) => h * 60 + +m);
+
 function dayView() {
     const date = parseDate(selected);
     const list = groupByDay(occurrences(selected, selected)).get(selected) || [];
     const timed = list.filter(item => hasTime(item.task.plannedAt));
     const anytime = list.filter(item => !hasTime(item.task.plannedAt));
     const startOf = item => parseDate(item.task.plannedAt).getHours() * 60 + parseDate(item.task.plannedAt).getMinutes();
-    const first = Math.min(DAY_START, ...timed.map(item => Math.floor(startOf(item) / 60)));
-    const top = value => (value - first * 60) / 60 * HOUR_PX;
+    const from = minutesOf(state.settings.dayStart);
+    const to = Math.max(from + 60, minutesOf(state.settings.dayEnd));
+    const pct = value => ((Math.min(to, Math.max(from, value)) - from) / (to - from) * 100).toFixed(3) + "%";
+
+    const all = timed.map(item => ({ item, start: startOf(item), end: startOf(item) + Math.max(15, item.task.durationMin || 30) }))
+        .sort((a, b) => a.start - b.start);
+    const before = all.filter(block => block.end <= from).map(block => block.item);
+    const after = all.filter(block => block.start >= to).map(block => block.item);
+    const blocks = all.filter(block => block.end > from && block.start < to);
 
     // пересекающиеся задачи встают рядом: колонки раздаются жадно внутри группы пересечений
-    const blocks = timed.map(item => ({ item, start: startOf(item), end: startOf(item) + Math.max(20, item.task.durationMin || 30) }))
-        .sort((a, b) => a.start - b.start);
     let group = [];
     let groupEnd = -1;
     const flush = () => {
@@ -207,30 +213,46 @@ function dayView() {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     let hours = "";
-    for (let h = first; h < 24; h++) {
-        hours += `<div class="hour" style="top: ${top(h * 60)}px"><span class="mono">${String(h).padStart(2, "0")}:00</span></div>`;
+    for (let m = Math.ceil(from / 60) * 60; m <= to; m += 60) {
+        hours += `<div class="hour" style="top: ${pct(m)}"><span class="mono">${String(m / 60).padStart(2, "0")}:00</span></div>`;
     }
+    const outside = (items, label) => items.length ? `<div class="label">${label}</div>` + dayRows(items) : "";
 
     return nav(capital(date.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })), 1) +
         loadLine(minutesPlanned(list)) +
-        (anytime.length ? `<div class="label">В течение дня</div>` + dayRows(anytime) : "") + `
-        <div class="day-grid" style="height: ${top(24 * 60)}px">
+        (anytime.length ? `<div class="label">В течение дня</div>` + dayRows(anytime) : "") +
+        outside(before, `Раньше ${state.settings.dayStart}`) + `
+        <div class="day-grid">
             ${hours}
-            ${selected === dayKey(now) && nowMin >= first * 60 ? `<div class="grid-now" style="top: ${top(nowMin)}px"></div>` : ""}
+            ${selected === dayKey(now) && nowMin >= from && nowMin <= to ? `<div class="grid-now" style="top: ${pct(nowMin)}"></div>` : ""}
             ${blocks.map(({ item, start, end, col, cols }) => {
                 const begin = parseDate(item.task.plannedAt);
-                const short = end - start < 45;
+                const short = Math.min(end, to) - Math.max(start, from) < 50;
                 // у короткой задачи время в строку с названием — только начало, иначе не влезает
                 const finish = item.task.durationMin && !short ? "–" + clock(new Date(begin.getTime() + item.task.durationMin * 60000)) : "";
                 return `
                 <button class="block ${short ? "short" : ""} ${cols >= 3 ? "narrow" : ""} ${item.virtual ? "virtual" : ""} ${item.task.done ? "done" : ""} ${item.task.kind === "show" ? "show" : ""}"
                         data-id="${item.task.id}" data-action="edit"
-                        style="top: ${top(start)}px; height: ${Math.max(22, top(end) - top(start) - 2)}px; left: calc(52px + (100% - 52px) * ${col / cols}); width: calc((100% - 52px) / ${cols} - 3px)">
+                        style="top: ${pct(start)}; height: calc(${pct(end)} - ${pct(start)} - 2px); left: calc(52px + (100% - 52px) * ${col / cols}); width: calc((100% - 52px) / ${cols} - 3px)">
                     <span class="block-title">${esc(item.task.title)}${item.virtual ? " ↻" : ""}</span>
                     <span class="mono block-time">${clock(begin)}${finish}</span>
                 </button>`;
             }).join("")}
-        </div>`;
+        </div>` +
+        outside(after, `После ${state.settings.dayEnd}`);
+}
+
+// сетка дня — ровно до нижней панели: весь рабочий день виден без прокрутки
+export function fitDayGrid() {
+    const grid = document.querySelector("#calendar:not([hidden]) .day-grid");
+    if (!grid) {
+        return;
+    }
+    const bar = document.querySelector(".tabbar")?.getBoundingClientRect().top ?? window.innerHeight;
+    // от верха документа, а не окна: под шторкой body зафиксирован и окно «прокручено» через top
+    const top = grid.getBoundingClientRect().top - document.body.getBoundingClientRect().top;
+    const tail = grid.nextElementSibling ? 0 : 24; // под сеткой ничего — оставляем воздух до панели
+    grid.style.height = Math.max(440, bar - top - tail - 8) + "px";
 }
 
 export function renderCalendar(el) {
@@ -238,13 +260,8 @@ export function renderCalendar(el) {
         <h1 class="title">Календарь</h1>
         <div class="segmented">${MODES.map(([id, label]) => `<button data-mode="${id}" ${id === mode ? 'aria-current="true"' : ""}>${label}</button>`).join("")}</div>
         ${mode === "day" ? dayView() : mode === "week" ? weekView() : monthView()}`;
-}
-
-// день сегодня открывается на текущем часе, а не на 7 утра
-function scrollToNow() {
-    const now = document.querySelector("#calendar .grid-now");
-    if (now) {
-        requestAnimationFrame(() => window.scrollTo({ top: Math.max(0, now.getBoundingClientRect().top + window.scrollY - 200) }));
+    if (mode === "day") {
+        requestAnimationFrame(fitDayGrid);
     }
 }
 
@@ -274,9 +291,6 @@ export function onCalendarClick(event, rerender) {
         month = new Date(date.getFullYear(), date.getMonth(), 1);
     }
     rerender();
-    if (mode === "day" && (modeButton || openDay)) {
-        scrollToNow();
-    }
     return true;
 }
 
@@ -284,3 +298,5 @@ export function onCalendarClick(event, rerender) {
 export function addOnSelected() {
     quickAdd({ day: selected }); // тот же быстрый ввод, что на «Сегодня»: фраза разбирается
 }
+
+window.addEventListener("resize", fitDayGrid);
