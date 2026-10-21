@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <!-- второй рубеж против внедрённого HTML: скрипты только свои файлы, никаких onerror= и чужих адресов.
+         GitHub Pages заголовков не даёт — поэтому метатегом. style-src 'unsafe-inline' — для style="…" в разметке. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
     <title>План</title>
     <meta name="description" content="Личный планер">
     <meta name="theme-color" content="#0B1F1D">
