@@ -41,8 +41,10 @@ export async function remindersCard() {
             <button class="btn ${ok ? "primary" : "ghost"} wide" data-notify="sync">Сверить и&nbsp;отправить</button>
             <button class="btn ghost wide" data-notify="send">Только отправить${changes ? ` · ${changes}` : ""}</button>
             <button class="btn ${ok ? "ghost" : "primary"} wide" data-notify="guide">Как собрать Быстрые команды</button>
-            <button class="btn ghost wide" data-notify="test">Тест: напоминание через 2&nbsp;минуты</button>
-            <button class="btn ghost wide" data-notify="clear">Очистить напоминания</button>
+            <div class="chips">
+                <button class="chip-btn" data-notify="test">Тест через 2&nbsp;минуты</button>
+                <button class="chip-btn" data-notify="clear">Очистить</button>
+            </div>
         </div>`;
 }
 
@@ -442,10 +444,17 @@ export async function guideSheet(open = null) {
             ${HELP}
         </div>
         <div class="sheet-foot">
-            <button class="btn ghost grow" data-notify-test>Тест через 2&nbsp;минуты</button>
-            <button class="btn primary grow" data-close>Готово</button>
+            <button class="btn ghost grow" data-notify-test>Тест · 2&nbsp;мин</button>
+            <button class="btn primary grow" data-close>Закрыть</button>
         </div>`);
     sheet.classList.add("tall");
+
+    // шаги раздела; когда есть ссылка iCloud, они свёрнуты в «Собрать вручную»
+    const steps = part => part.steps.map((step, i) => `
+        <div class="guide-step">
+            <label><input type="checkbox" data-check="${part.id}-${i}" ${checks[`${part.id}-${i}`] ? "checked" : ""}><span class="g-body">${stepHtml(step)}</span></label>
+            ${step.alt ? `<details class="alt"><summary>Не получается?</summary><p>${step.alt}</p></details>` : ""}
+        </div>`).join("");
 
     const render = () => {
         sheet.querySelector("#guideParts").innerHTML = GUIDE.map(part => {
@@ -459,12 +468,8 @@ export async function guideSheet(open = null) {
                     <p class="text-2">${part.intro}</p>
                     ${SHORTCUT_LINKS[part.id] ? `
                         <a class="btn primary wide" href="${esc(SHORTCUT_LINKS[part.id])}" target="_blank" rel="noopener">Добавить команду одним нажатием</a>
-                        <p class="text-2">Откроются Быстрые команды → «Добавить команду». Вручную собирать не нужно, шаги ниже — на случай, если ссылка не сработает.</p>` : ""}
-                    ${part.steps.map((step, i) => `
-                        <div class="guide-step">
-                            <label><input type="checkbox" data-check="${part.id}-${i}" ${checks[`${part.id}-${i}`] ? "checked" : ""}><span class="g-body">${stepHtml(step)}</span></label>
-                            ${step.alt ? `<details class="alt"><summary>Не получается?</summary><p>${step.alt}</p></details>` : ""}
-                        </div>`).join("")}
+                        <p class="text-2">Откроются Быстрые команды → «Добавить команду». Если ссылка не сработала — собери по шагам ниже.</p>` : ""}
+                    ${SHORTCUT_LINKS[part.id] ? `<details class="manual"><summary>Собрать вручную</summary>${steps(part)}</details>` : steps(part)}
                 </details>`;
         }).join("");
     };

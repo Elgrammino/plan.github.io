@@ -30,10 +30,11 @@
     overflow-wrap: anywhere;
 }
 
+/* светлым, не золотом: золото — для «сейчас» и главной кнопки, а цифры читаются издалека */
 .focus-clock {
     font-size: var(--fs-72);
     line-height: 1;
-    color: var(--accent);
+    color: var(--text);
     margin: var(--sp-32) 0 var(--sp-16);
 }
 

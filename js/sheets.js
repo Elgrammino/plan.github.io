@@ -79,7 +79,7 @@ export function quickAdd({ day = null } = {}) {
             <div class="added" id="quickAdded"></div>
         </div>
         <div class="sheet-foot">
-            <button class="btn ghost grow" data-close>Готово</button>
+            <button class="btn ghost grow" data-close>Закрыть</button>
             <button class="btn primary grow" id="quickAdd">Добавить</button>
         </div>`);
     const input = sheet.querySelector("#quickText");
@@ -146,6 +146,14 @@ export function editTask(task, draft = null) {
         <div class="sheet-body">
             <textarea class="textarea title-input" id="title" rows="1" placeholder="Что сделать">${esc(task.title)}</textarea>
             ${chips("kind", [["task", "Задача"], ["post", "Публикация"], ["show", "Выступление"]], task.kind || "task")}
+            <div class="field"><div class="label">Шаги</div>
+                <div id="checklist"></div>
+                <input class="input" id="newStep" enterkeyhint="done" placeholder="Добавить шаг" style="margin-top: var(--sp-8)">
+                <div class="chips" id="templates" style="margin-top: var(--sp-8)">
+                    ${state.templates.map(template => `<button class="chip-btn" data-template="${template.id}">+ ${esc(template.name)}</button>`).join("")}
+                    <button class="chip-btn quiet" id="saveTemplate">Сохранить как шаблон</button>
+                </div>
+            </div>
             <div id="showBox"></div>
 
             <div class="field"><div class="label">Когда</div>
@@ -177,10 +185,6 @@ export function editTask(task, draft = null) {
                 ${chips("duration", DURATIONS.map(min => [String(min), durationText(min)]), String(task.durationMin || ""))}
             </div>
 
-            <div class="field"><div class="label">Энергия</div>
-                ${chips("energy", ENERGY.map(([value, label, dots]) => [value, `${label}&nbsp;<span class="energy">${dots}</span>`]), task.energy)}
-            </div>
-
             <div class="field"><div class="label">Список</div>
                 ${chips("list", lists, task.list || "")}
             </div>
@@ -188,6 +192,16 @@ export function editTask(task, draft = null) {
             ${weekGoals().length ? `<div class="field"><div class="label">Цель недели</div>
                 ${chips("goal", weekGoals().map(goal => [goal.id, esc(goal.title)]), task.goal)}
             </div>` : ""}
+
+            <div class="field">
+                <label class="toggle"><span>Важно</span><input type="checkbox" switch id="priority" ${task.priority === "high" ? "checked" : ""}></label>
+            </div>
+
+            <details class="more-params" ${task.energy || task.due || task.start || task.persistent || (!draft && chainTasks(task).length) ? "open" : ""}>
+                <summary>Ещё параметры</summary>
+            <div class="field"><div class="label">Энергия</div>
+                ${chips("energy", ENERGY.map(([value, label, dots]) => [value, `${label}&nbsp;<span class="energy">${dots}</span>`]), task.energy)}
+            </div>
 
             ${draft ? "" : `<div class="field"><div class="label">Цепочка</div><div id="chain"></div></div>`}
 
@@ -199,19 +213,10 @@ export function editTask(task, draft = null) {
             </div>
 
             <div class="field">
-                <label class="toggle"><span>Важно</span><input type="checkbox" switch id="priority" ${task.priority === "high" ? "checked" : ""}></label>
                 <label class="toggle"><span>Настойчиво<small>Напоминать, пока не отмечу или не перенесу</small></span>
                     <input type="checkbox" switch id="persistent" ${task.persistent ? "checked" : ""}></label>
             </div>
-
-            <div class="field"><div class="label">Шаги</div>
-                <div id="checklist"></div>
-                <input class="input" id="newStep" enterkeyhint="done" placeholder="Добавить шаг" style="margin-top: var(--sp-8)">
-                <div class="chips" id="templates" style="margin-top: var(--sp-8)">
-                    ${state.templates.map(template => `<button class="chip-btn" data-template="${template.id}">+ ${esc(template.name)}</button>`).join("")}
-                    <button class="chip-btn quiet" id="saveTemplate">Сохранить как шаблон</button>
-                </div>
-            </div>
+            </details>
 
             <div class="field"><div class="label">Заметки</div>
                 <textarea class="textarea" id="notes" rows="2" placeholder="Подробности, ссылки">${esc(task.notes)}</textarea>
@@ -221,7 +226,7 @@ export function editTask(task, draft = null) {
             <button class="icon-btn" id="delete" aria-label="Удалить">${ICONS.trash}</button>
             ${draft ? "" : `<button class="icon-btn" id="focus" aria-label="Фокус">${ICONS.timer}</button>
             <button class="btn ghost grow" id="postpone">Перенести</button>`}
-            <button class="btn primary grow" data-close>Готово</button>
+            <button class="btn primary grow" data-close>Закрыть</button>
         </div>`, { onClose: save });
 
     const $ = selector => sheet.querySelector(selector);

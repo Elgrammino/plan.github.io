@@ -1,5 +1,5 @@
 // Экраны «Сегодня» и «Входящие».
-import { dayKey, durationText, parseDate, relativeDay, timeText, toIso } from "./dates.js";
+import { dayKey, dayOf, durationText, hasTime, parseDate, relativeDay, timeText, toIso } from "./dates.js";
 import { currentTask, dayTasks, endOf, inboxTasks, isOverdue, laterTasks, listName, overdueTasks, state } from "./store.js";
 import { todayButton } from "./notify.js";
 import { actions as showActions, departure, showDayStrip } from "./show.js";
@@ -33,7 +33,8 @@ function sub(task, { showDay = false } = {}) {
     if (task.checklist.length) {
         parts.push(`${task.checklist.filter(step => step.done).length} из ${task.checklist.length}`);
     }
-    if (task.due) {
+    // «вчера · до вчера» — дедлайн в тот же день, что и план, не повторяем
+    if (task.due && !(showDay && dayOf(task.due) === dayOf(task.plannedAt))) {
         parts.push("до " + esc(relativeDay(task.due)));
     }
     if (task.priority === "high") {
@@ -45,9 +46,10 @@ function sub(task, { showDay = false } = {}) {
     return parts.join(" · ");
 }
 
-export function row(task, { time = null, side = "", showDay = false } = {}) {
-    const classes = ["item", task.done && "done", isOverdue(task) && "late"].filter(Boolean).join(" ");
-    const details = sub(task, { showDay });
+// missed — время сегодня уже прошло, а не сделано: иначе такая строка выглядит как будущая
+export function row(task, { time = null, side = "", showDay = false, missed = false } = {}) {
+    const classes = ["item", task.done && "done", (isOverdue(task) || missed) && "late", missed && "missed"].filter(Boolean).join(" ");
+    const details = [missed ? "прошло, не сделано" : "", sub(task, { showDay })].filter(Boolean).join(" · ");
     return `
         <div class="${classes}" data-id="${task.id}">
             ${time !== null ? `<span class="time mono">${time}</span>` : ""}
@@ -149,7 +151,7 @@ function focusCard({ task, running, prepFor }, now) {
             <div class="focus-card-count"><span class="mono">${clock(Math.max(1, minutes))}</span><small>${countLabel}</small></div>
             ${working
                 ? `<button class="btn primary wide" data-focus-open>Открыть таймер</button>`
-                : `<button class="btn primary wide" data-action="start">Приступить · <span class="mono">${state.settings.focusMin || 40}</span>&nbsp;мин</button>`}
+                : `<button class="btn primary wide" data-action="start">Приступить · ${state.settings.focusMin || 40}&nbsp;мин</button>`}
             <div class="btns">
                 <button class="btn ghost" data-action="toggle">Готово</button>
                 <button class="btn ghost" data-action="postpone">Перенести</button>
@@ -185,10 +187,12 @@ export function renderToday(el, viewDay) {
         <div id="installHint"></div>`;
 
     if (isToday) {
-        html += `<div class="today-tools">${tutorialChip()}${focusChip()}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
+        const current = cardTask(now);
+        // идущий фокус по задаче из «Дальше» открывается её кнопкой «Открыть таймер» — второй вход чипом не нужен
+        const chip = current && state.focus?.taskId === current.task.id ? "" : focusChip();
+        html += `<div class="today-tools">${tutorialChip()}${chip}${todayButton()}${dumpEntry()}${goalsChip()}</div>`
             + habitsStrip(now) + morningEntry(now) + eveningEntry(now);
         // раскладка «Фокус» (выбрана на стенде 20.10): одно дело крупно, остальное — полосами и свёрнутым днём
-        const current = cardTask(now);
         if (current) {
             html += focusCard(current, now);
         }
@@ -200,7 +204,7 @@ export function renderToday(el, viewDay) {
         const late = overdueTasks(now).filter(task => !(task.plannedAt && task.plannedAt.startsWith(key)));
         if (late.length) {
             html += `<details class="day-fold overdue-fold"><summary><span>Просрочено</span><span class="mono">${late.length}</span></summary>` +
-                late.map(task => row(task, { time: "", showDay: true })).join("") + `</details>`;
+                late.map(task => row(task, { time: hasTime(task.plannedAt) ? timeText(task.plannedAt) : "", showDay: true })).join("") + `</details>`;
         }
     }
 
@@ -215,7 +219,7 @@ export function renderToday(el, viewDay) {
     const fold = isToday && all.length;
     if (fold) {
         const open = all.filter(task => !task.done).length;
-        html += `<details class="day-fold" open><summary><span>Весь день</span><span class="mono">${open} из ${all.length}</span></summary>`;
+        html += `<details class="day-fold" open><summary><span>Весь день</span><span class="mono">осталось ${open} из ${all.length}</span></summary>`;
     }
 
     if (timed.length) {
@@ -234,8 +238,8 @@ export function renderToday(el, viewDay) {
             if (gapFrom && minutesBetween(gapFrom, gapTo) >= 15) {
                 html += `<div class="gap mono">свободно ${durationText(minutesBetween(gapFrom, gapTo))}</div>`;
             }
-            html += row(task, { time: timeText(task.plannedAt) });
             const end = endOf(task);
+            html += row(task, { time: timeText(task.plannedAt), missed: isToday && !task.done && end < now });
             prevEnd = prevEnd && prevEnd > end ? prevEnd : end;
         }
         if (!nowShown) {
@@ -272,7 +276,7 @@ export function renderInbox(el) {
         </div>
         <p class="subtitle">Задачи без дня. Разложи их по дням.</p>
         ${tasks.length ? tasks.map(task => row(task, {
-            side: `<button class="chip-btn side" data-action="today">Сегодня</button>`
+            side: `<span class="side"><button class="chip-btn" data-action="today">Сегодня</button><button class="chip-btn" data-action="tomorrow">Завтра</button></span>`
         })).join("") : `
             <div class="empty">
                 <svg class="mark" viewBox="0 0 64 64"><path d="M10 36l8-20h28l8 20v14H10z"/><path d="M10 36h13l3 5h12l3-5h13"/></svg>

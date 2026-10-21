@@ -118,6 +118,7 @@ export function openSheet(html, { onClose } = {}) {
             return;
         }
         closed = true;
+        document.removeEventListener("keydown", onKey);
         onClose?.();
         if (how === "dismiss") {
             // смахнули: уезжает вниз целиком, с той точки, где отпустили
@@ -134,6 +135,14 @@ export function openSheet(html, { onClose } = {}) {
         unlockScroll();
     };
     backdrop.addEventListener("click", () => close());
+    // Esc с клавиатуры (iPad, внешняя клавиатура) закрывает верхнюю шторку
+    const onKey = event => {
+        const sheets = document.querySelectorAll(".sheet:not(.leaving):not(.dismiss)");
+        if (event.key === "Escape" && sheets[sheets.length - 1] === sheet) {
+            close();
+        }
+    };
+    document.addEventListener("keydown", onKey);
 
     // шторка идёт за пальцем вниз; ниже трети или быстрый взмах — закрыть
     let startY = 0, startT = 0, dy = 0;

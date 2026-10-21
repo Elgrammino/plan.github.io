@@ -57,7 +57,7 @@ export function renderContent(el) {
                     list = list.slice(0, 5);
                 }
             }
-            return `<div class="label stage-label">${stage}<span class="mono">${all.filter(task => stageOf(task) === stage).length}</span></div>` +
+            return `<div class="label stage-label">${stage.charAt(0).toUpperCase() + stage.slice(1)}<span class="mono">${all.filter(task => stageOf(task) === stage).length}</span></div>` +
                 (list.map(card).join("") || `<p class="stage-empty">—</p>`) + more;
         }).join("");
     } else if (view === "calendar") {

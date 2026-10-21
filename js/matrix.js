@@ -146,7 +146,7 @@ function onClick(event) {
         </div>
         <div class="sheet-foot">
             <button class="btn ghost grow" data-edit>Открыть задачу</button>
-            <button class="btn primary grow" data-close>Готово</button>
+            <button class="btn primary grow" data-close>Закрыть</button>
         </div>`);
     sheet.addEventListener("click", clicked => {
         const to = QUADRANTS.find(q => q.id === clicked.target.closest("[data-to]")?.dataset.to);

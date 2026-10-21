@@ -143,7 +143,7 @@ export function habitsSheet() {
             <div id="habits"></div>
             <button class="btn ghost wide" id="newHabit" style="margin-top: var(--sp-16)">Новая привычка</button>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`,
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`,
         { onClose: () => unsubscribe() });
     sheet.classList.add("tall");
     const render = () => {

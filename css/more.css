@@ -297,3 +297,14 @@
 .guide-step input:checked + .g-body .g-var {
     color: var(--text-3);
 }
+
+/* есть ссылка iCloud — ручная сборка тихой строкой ниже */
+.guide .manual {
+    border: 0;
+    padding: var(--sp-4) 0 0;
+}
+
+.guide .manual > summary {
+    font: 600 var(--fs-16) var(--font-body);
+    color: var(--text-2);
+}

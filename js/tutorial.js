@@ -51,7 +51,7 @@ const STEPS = [
     {
         id: "inbox", part: "Разложить по дням", title: "Входящие", screen: "inbox",
         text: "Здесь всё, что без дня. Если пусто — шаг засчитается сам.",
-        moves: [{ target: "#inbox .item .side", say: "Нажми «Сегодня»: задача встанет в план на сегодня." }],
+        moves: [{ target: '#inbox .item .side [data-action="today"]', say: "Нажми «Сегодня»: задача встанет в план на сегодня. «Завтра» — на завтра." }],
         snap: () => ({ ids: inboxTasks().map(task => task.id) }),
         // пустые Входящие — шаг сам засчитывается
         check: snap => !snap.ids.length || snap.ids.some(id => state.tasks.get(id)?.plannedAt)
@@ -62,9 +62,9 @@ const STEPS = [
         moves: [
             { target: "#today .item .body", say: "Коснись задачи: откроется её карточка." },
             { target: "#today .focus-card-title", say: "Коснись названия задачи: откроется её карточка." },
-            { target: '.sheet .field:has(input[name="duration"])', say: "Выбери, сколько займёт, и энергию ниже. Так План знает, хватит ли дня." }
+            { target: '.sheet .field:has(input[name="duration"])', say: "Выбери, сколько займёт: так План знает, хватит ли дня. Редкое — энергия, сроки — в «Ещё параметры» ниже." }
         ],
-        check: (snap, since) => tasks().some(task => after(task.updatedAt, since) && task.energy && task.durationMin)
+        check: (snap, since) => tasks().some(task => after(task.updatedAt, since) && task.durationMin)
     },
     {
         id: "done", part: "Жить по плану", title: "Отметить сделанное", screen: "today",
@@ -110,6 +110,7 @@ const STEPS = [
         text: "Большое дело тянет за собой маленькие: сборы, выезд, «после». Цепочка ставит их сама. Создадим пример — потом его можно удалить.",
         action: ["Создать пример", chainExample],
         moves: [
+            { target: ".sheet .more-params:not([open]) > summary", say: "Открой «Ещё параметры»: цепочка там." },
             { target: '.sheet #chain [data-chain="chain-show"], .sheet #chain [data-chain]:last-child', say: "Это «Цепочка». Нажми «+ Выступление»: План сам добавит сборы, выезд и «после»." },
             { target: ".sheet #chainApply", say: "Проверь шаги и нажми «Создать»." }
         ],
@@ -334,7 +335,7 @@ function place(found, mode) {
         const rect = found.element.getBoundingClientRect();
         const pad = 6;
         spot.hidden = false;
-        // в шторке рядом с целью есть и «Добавить», и «Готово» — их не гасим, только приглушаем
+        // в шторке рядом с целью есть и «Добавить», и «Закрыть» — их не гасим, только приглушаем
         spot.classList.toggle("soft", mode === "compact");
         spot.style.width = rect.width + pad * 2 + "px";
         spot.style.height = rect.height + pad * 2 + "px";

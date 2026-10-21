@@ -32,7 +32,7 @@ export function goalsSheet() {
             </div>
             <div id="lastWeek"></div>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`,
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`,
         { onClose: () => unsubscribe() });
     const $ = selector => sheet.querySelector(selector);
 

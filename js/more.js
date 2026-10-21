@@ -283,7 +283,7 @@ function batchSheet(batch) {
         </div>
         <div class="sheet-foot">
             <button class="btn ghost grow" id="trashBatch">Удалить пакет</button>
-            <button class="btn primary grow" data-close>Готово</button>
+            <button class="btn primary grow" data-close>Закрыть</button>
         </div>`);
     sheet.querySelector("[data-close]").addEventListener("click", close);
     sheet.querySelectorAll("[data-shift]").forEach(button => button.addEventListener("click", async () => {

@@ -39,20 +39,20 @@
 
         <section class="screen" id="more" data-title="Ещё" hidden>
             <h1 class="title">Ещё</h1>
-            <p class="subtitle">Обмен, бэкап и&nbsp;проверка</p>
+            <p class="subtitle">Напоминания, настройки, обмен и&nbsp;бэкап</p>
             <div id="exchange"></div>
-            <div class="label">Проверка</div>
-            <div class="card" id="checks"></div>
-            <div class="label">Данные в&nbsp;телефоне</div>
-            <div class="card">
-                <div class="check-row">
-                    <div class="what">
-                        <div>Запусков: <span class="mono" id="launches">—</span></div>
-                        <div class="why">Число хранится в&nbsp;базе на&nbsp;телефоне и&nbsp;растёт с&nbsp;каждым открытием. После перезагрузки телефона оно должно продолжить расти, а&nbsp;не&nbsp;начаться с&nbsp;единицы.</div>
+            <details class="day-fold diagnostics">
+                <summary><span>Диагностика</span><span class="mono" id="version"></span></summary>
+                <div class="card" id="checks"></div>
+                <div class="card" style="margin-top: var(--sp-8)">
+                    <div class="check-row">
+                        <div class="what">
+                            <div>Запусков: <span class="mono" id="launches">—</span></div>
+                            <div class="why">Число хранится в&nbsp;базе на&nbsp;телефоне и&nbsp;растёт с&nbsp;каждым открытием. После перезагрузки телефона оно должно продолжить расти, а&nbsp;не&nbsp;начаться с&nbsp;единицы.</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <p class="subtitle" style="margin-top: var(--sp-24)">Версия <span class="mono" id="version"></span></p>
+            </details>
         </section>
     </main>
 

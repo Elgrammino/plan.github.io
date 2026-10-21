@@ -158,7 +158,7 @@ function weekView() {
                 </button>
                 ${planned ? `<div class="bar ${planned > limit ? "over" : ""}"><i style="transform: scaleX(${(Math.min(100, planned / limit * 100)) / 100})"></i></div>` : ""}
                 ${list.map(({ task, virtual }) => `
-                    <button class="week-task ${virtual ? "virtual" : ""} ${task.done ? "done" : ""} ${task.kind === "show" ? "show" : ""}" data-id="${task.id}" data-action="edit">
+                    <button class="week-task ${virtual ? "virtual" : ""} ${task.done ? "done" : key < today && !virtual ? "late" : ""} ${task.kind === "show" ? "show" : ""}" data-id="${task.id}" data-action="edit">
                         <span class="mono">${hasTime(task.plannedAt) ? timeText(task.plannedAt) : "·"}</span>${esc(task.title)}${virtual ? " ↻" : ""}
                     </button>`).join("") || `<p class="week-empty">—</p>`}
             </div>`;

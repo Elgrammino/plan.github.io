@@ -73,7 +73,7 @@ function daySheet() {
                 </div>
             </div>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`, { onClose: save });
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`, { onClose: save });
     const $ = selector => sheet.querySelector(selector);
     sheet.querySelector("[data-close]").addEventListener("click", close);
 
@@ -105,7 +105,7 @@ function postponeSheet() {
                 <div class="row" style="margin-top: var(--sp-8)"><span class="text-2 row-label">В&nbsp;выходные</span><input class="input" type="time" id="postponeWeekend" value="${settings.postponeWeekend}"></div>
             </div>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`, { onClose: save });
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`, { onClose: save });
     const $ = selector => sheet.querySelector(selector);
 
     // рядом с каждым вариантом — куда он перенесёт задачу прямо сейчас
@@ -142,7 +142,7 @@ function listsSheet() {
             </div>
             <p class="hint" style="margin-top: var(--sp-12)">«Общий» — задачи уйдут в&nbsp;общий список Напоминаний iCloud с&nbsp;таким&nbsp;же названием. Заработает вместе с&nbsp;Быстрыми командами.</p>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`);
     const $ = selector => sheet.querySelector(selector);
     const count = id => [...state.tasks.values()].filter(task => task.list === id && !task.deletedAt && !task.done).length;
 
@@ -242,7 +242,7 @@ function templatesSheet() {
             <div id="templates"></div>
             <button class="btn ghost wide" id="newTemplate" style="margin-top: var(--sp-16)">Новый шаблон</button>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`);
     const render = () => {
         sheet.querySelector("#templates").innerHTML = state.templates.map(template => `
             <button class="batch-row" data-template="${template.id}">
@@ -326,7 +326,7 @@ function chainsSheet() {
             <div id="chains"></div>
             <button class="btn ghost wide" id="newChain" style="margin-top: var(--sp-16)">Новый шаблон</button>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`);
     const render = () => {
         sheet.querySelector("#chains").innerHTML = state.chains.map(chain => `
             <button class="batch-row" data-chain="${chain.id}">
@@ -420,7 +420,7 @@ function trashSheet() {
         </div>
         <div class="sheet-foot">
             <button class="btn ghost grow" id="purge">Очистить</button>
-            <button class="btn primary grow" data-close>Готово</button>
+            <button class="btn primary grow" data-close>Закрыть</button>
         </div>`);
     sheet.classList.add("tall");
     const render = () => {
@@ -469,7 +469,7 @@ export function journalSheet() {
             <h2>Сделано</h2>
             <div id="journal"></div>
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`,
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`,
         { onClose: () => unsubscribe() });
     sheet.classList.add("tall");
 

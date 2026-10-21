@@ -190,6 +190,8 @@
 .item .side {
     flex: none;
     align-self: center;
+    display: flex;
+    gap: var(--sp-4);
 }
 
 .item.late .check::before {
@@ -795,4 +797,41 @@ input[type="time"].input {
 
 .overdue-fold > summary {
     color: var(--text);
+}
+
+/* карточка задачи: редкие поля свёрнуты под «Ещё параметры» */
+.more-params {
+    margin-top: var(--sp-16);
+    border-top: 1px solid var(--line);
+}
+
+.more-params > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--tap);
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.more-params > summary::-webkit-details-marker {
+    display: none;
+}
+
+.more-params > summary::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform var(--dur) var(--ease);
+}
+
+.more-params[open] > summary::after {
+    transform: rotate(225deg) translateY(-2px);
 }

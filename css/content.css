@@ -163,7 +163,7 @@
 }
 
 .post-card.stage-3 .format {
-    color: var(--accent);
+    color: var(--text);
 }
 
 .post-card.stage-4 {
@@ -257,8 +257,15 @@
     border-bottom: 1px solid var(--line);
 }
 
-.week-day.past {
-    opacity: .55;
+/* прошедший день: тише только заголовок; несделанное в нём — с красной чертой, а не серым, как сделанное */
+.week-day.past .week-name,
+.week-day.past .week-head .mono {
+    color: var(--text-3);
+}
+
+.week-task.late {
+    padding-left: var(--sp-8);
+    box-shadow: inset 2px 0 0 var(--alert);
 }
 
 .week-head {

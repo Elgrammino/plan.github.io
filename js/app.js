@@ -213,10 +213,11 @@ document.querySelector(".app").addEventListener("click", event => {
             postponeTask(task);
             break;
         case "today":
+        case "tomorrow":
             haptic();
-            task.plannedAt = dayKey(new Date());
+            task.plannedAt = dayKey(addDays(new Date(), button.dataset.action === "tomorrow" ? 1 : 0));
             saveTask(task);
-            showToast("На сегодня", "Отменить", () => {
+            showToast(button.dataset.action === "tomorrow" ? "На завтра" : "На сегодня", "Отменить", () => {
                 task.plannedAt = null;
                 saveTask(task);
             });

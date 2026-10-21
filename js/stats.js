@@ -47,7 +47,7 @@ function columns(days, value, format, now, title) {
                 </button>`;
             }).join("")}
         </div>
-        <p class="chart-readout" aria-hidden="true">Нажми на столбик — покажу день</p>`;
+        ${values.some(Boolean) ? `<p class="chart-readout" aria-hidden="true">Нажми на столбик — покажу день</p>` : `<p class="chart-readout" aria-hidden="true">Пока пусто</p>`}`;
 }
 
 // «на что ушёл фокус»: полоски по убыванию, длина — доля от лидера
@@ -88,7 +88,7 @@ export function statsSheet() {
 
             <div class="label">Фокус</div>
             <div class="journal-sum compact">
-                ${tile(durationText(focusMinutes(since(1))) || "0", "сегодня")}${tile(durationText(focusMinutes(since(7))) || "0", "за&nbsp;7 дней")}${tile(durationText(focusMinutes(since(30))) || "0", "за&nbsp;30 дней")}
+                ${tile(durationText(focusMinutes(since(1))) || "0 мин", "сегодня")}${tile(durationText(focusMinutes(since(7))) || "0 мин", "за&nbsp;7 дней")}${tile(durationText(focusMinutes(since(30))) || "0 мин", "за&nbsp;30 дней")}
             </div>
             ${columns(days, day => focusByDay.get(day) || 0, durationText, now, "Фокус по дням за две недели")}
             ${topFocus.length ? `<div class="label">На что ушёл фокус за&nbsp;30 дней</div>` + barList(topFocus.map(([id, minutes]) => [state.tasks.get(id)?.title || "удалённая задача", minutes]))
@@ -100,7 +100,7 @@ export function statsSheet() {
                 return `<div class="stat-row"><span>${esc(habit.title)}</span><span class="mono text-2">серия ${streak(habit)}${percent !== null ? " · " + percent + "%" : ""}</span></div>`;
             }).join("") || `<p class="hint">Привычек пока нет: «Ещё → Привычки».</p>`}
         </div>
-        <div class="sheet-foot"><button class="btn primary grow" data-close>Готово</button></div>`);
+        <div class="sheet-foot"><button class="btn primary grow" data-close>Закрыть</button></div>`);
     sheet.classList.add("tall");
     sheet.querySelector("[data-close]").addEventListener("click", close);
     // касание по столбику: день и значение в строке под этим графиком
